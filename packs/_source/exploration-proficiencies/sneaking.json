@@ -1,0 +1,36 @@
+{
+  "_id": "acksfmSklSneak00",
+  "_key": "!items!acksfmSklSneak00",
+  "name": "Sneaking",
+  "type": "ability",
+  "img": "icons/svg/daze.svg",
+  "system": {
+    "proficiencytype": "class",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "1d20",
+    "rollType": "above",
+    "rollTarget": 17,
+    "blindroll": false,
+    "description": "<p>Prowls in total silence (begin as a movement action; Judge rolls in secret — the thief always believes he succeeded). Sneak at exploration speed or 1/2 combat speed freely; -5 above that; -10 running. Success = literally no noise, even for successful Listeners; engaging an unengaged opponent from the rear denies its free facing change. Opponents suffer -2 to surprise while the thief is out of sight.</p><p><em>Auto-scales with the owner's class level in party rolls (RR p. 31):</em> L1: 17+ · L2: 16+ · L3: 15+ · L4: 14+ · L5: 13+ · L6: 12+ · L7: 10+ · L8: 8+ · L9: 6+ · L10: 4+ · L11: 2+ · L12: 0+ · L13: -2+ · L14: -4+. <em>For a class using the skill at half level, set the module's levelFactor flag to 0.5.</em></p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "thiefSkill": "sneaking",
+      "levelFactor": 1
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

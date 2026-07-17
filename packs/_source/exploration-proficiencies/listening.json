@@ -1,0 +1,36 @@
+{
+  "_id": "acksfmSklListen0",
+  "_key": "!items!acksfmSklListen0",
+  "name": "Listening",
+  "type": "ability",
+  "img": "icons/svg/daze.svg",
+  "system": {
+    "proficiencytype": "class",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "1d20",
+    "rollType": "above",
+    "rollTarget": 14,
+    "blindroll": false,
+    "description": "<p>Listens at doors, passageways, and intersections (Judge rolls in secret). Requires quiet; the thief must be the closest party member to the sound; 1 round, once per turn while the party is moving. <em>Automated: matched by the Listen party roll.</em></p><p><em>Auto-scales with the owner's class level in party rolls (RR p. 31):</em> L1: 14+ · L2: 13+ · L3: 12+ · L4: 11+ · L5: 10+ · L6: 9+ · L7: 8+ · L8: 7+ · L9: 6+ · L10: 5+ · L11: 4+ · L12: 3+ · L13: 2+ · L14: 1+. <em>For a class using the skill at half level, set the module's levelFactor flag to 0.5.</em></p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "thiefSkill": "listening",
+      "levelFactor": 1
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

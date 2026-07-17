@@ -1,0 +1,373 @@
+{
+  "TYPES": {
+    "Actor": {
+      "acks-formation.party": "Party Formation"
+    },
+    "RegionBehavior": {
+      "acks-formation.encounterZone": "ACKS Encounter Zone"
+    }
+  },
+  "ACKS-FORMATION": {
+    "ENCOUNTER_ZONE": {
+      "FIELDS": {
+        "tableUuid": {
+          "label": "Encounter table",
+          "hint": "RollTable drawn from (privately) when a wandering-monster encounter triggers while the party token is inside this region. Drag a RollTable here or paste its UUID."
+        },
+        "encounterEvery": {
+          "label": "Throw frequency (turns)",
+          "hint": "Make an encounter throw every N dungeon turns inside this zone. 0 = inherit the module setting (RAW: 2)."
+        },
+        "encounterTarget": {
+          "label": "Target value (1d6)",
+          "hint": "Encounter occurs on this value or higher inside this zone. 0 = inherit the module setting (RAW: 6)."
+        }
+      }
+    },
+    "app": {
+      "title": "Exploration Formation",
+      "defaultName": "Exploration Party",
+      "create": "New formation",
+      "addSelected": "Add selected",
+      "addSelectedHint": "Add the tokens selected on the canvas to this formation (their tokens are stashed and replaced by the party token)",
+      "disband": "Disband",
+      "disbandHint": "Restore all member tokens around the party token and remove the formation",
+      "disbandConfirm": "Disband {name}? Member tokens will be restored around the party token.",
+      "marchingOrder": "Marching Order",
+      "rank": "Rank",
+      "addBlankHint": "Add an empty slot to the marching grid (swap it into position with the arrows — gaps are kept in combat deployment)",
+      "blankSlot": "— empty —",
+      "shieldedBadge": "closed",
+      "shieldHint": "Close/open the lantern shutter: sheds no light while closed but keeps burning oil (RR equipment). Mapping needs an open light.",
+      "frontage1": "Single file (≤5')",
+      "frontage2": "Two abreast (≥6')",
+      "frontage3": "Three abreast (≥9')",
+      "frontageHint": "How many march abreast (RR p. 264: single file in corridors 5' or narrower, two columns at 6'+). Groups the list into ranks and shapes combat deployment; the party token itself stays 1×1.",
+      "autoArrange": "Auto-arrange",
+      "autoArrangeHint": "Build an I-formation per RR p. 264: a FULL front line (scouts and best-armored melee, spears next) and a FULL back line (Rear Guard, then missile users) are staffed first; non-combatants, the mapper, and spellcasters hold the middle ranks, centered with blank slots. Tweak afterwards with the arrows.",
+      "emptyMembers": "Drag actors or tokens into this sheet, or right-click a token on the canvas and use its \"Add to party\" HUD button.",
+      "emptyState": "No formation yet — right-click a token and use \"Add to party\", or create a Party Formation actor.",
+      "missingActor": "(missing actor)",
+      "speed": "Exploration",
+      "speedHint": "The party moves at the pace of its slowest member (feet per 10-minute turn)",
+      "perTurn": "per turn",
+      "perRound": "per round",
+      "turn": "turn",
+      "turns": "turns",
+      "turnsLeft": "turns left",
+      "elapsed": "Elapsed",
+      "rest": "Rest",
+      "sinceRest": "turns since rest",
+      "windedBadge": "WINDED",
+      "carry": "Carry-over",
+      "carryHint": "Distance moved that has not yet added up to a full turn",
+      "advanceTurn": "Turn",
+      "advanceTurnHint": "Mark off one full dungeon turn (10 minutes) — methodical searching, picking locks methodically, and other full-turn activities",
+      "restTurn": "Rest",
+      "restTurnHint": "Spend one turn resting (resets the rest counter and removes Winded)",
+      "encounterNow": "Check",
+      "encounterNowHint": "Make a wandering-monster throw right now (GM-whispered)",
+      "rations": "Rations",
+      "rationsHint": "Consume one ration per member from their inventory",
+      "undoTurnHint": "Roll the clock back one turn (bookkeeping only; world time is not rewound)",
+      "pauseHint": "Pause/resume movement-driven turn tracking (e.g. while repositioning the token)",
+      "enc": "Enc.",
+      "noStashedToken": "No stashed token: this member was added without a canvas token and will not be re-placed on disband",
+      "removeMemberHint": "Remove from the formation and restore their token beside the party token",
+      "lights": "Light Sources",
+      "lightIt": "Light",
+      "toggleLightHint": "Extinguish or relight (remaining burn time is kept; relighting takes a round via the tinderbox)",
+      "table": "Encounter table",
+      "tableHint": "Default RollTable drawn from when a wandering-monster encounter triggers. An ACKS Encounter Zone region under the party token overrides this.",
+      "tableNone": "— none (announce only) —",
+      "spells": "Tracked Spells",
+      "spellManual": "— custom / manual —",
+      "spellPickHint": "Track a spell known by a member (duration parsed from the spell when it reads like \"6 turns\")",
+      "spellName": "Spell or effect name",
+      "spellTurns": "turns",
+      "trackSpell": "Track",
+      "trackSpellHint": "Counts down one per dungeon turn; announced when it gutters (1 turn) and expires",
+      "spellPlusHint": "Add one turn (e.g. higher caster level)",
+      "spellMinusHint": "Remove one turn",
+      "partySave": "Party save:",
+      "magical": "Magical",
+      "magicalHint": "Magical source: apply each member's Bonus vs Magic and WIS modifier to the roll (uncheck for mundane hazards)",
+      "saveTooltip": "Roll a {save} saving throw for every member against their own sheet's target",
+      "openFormationHint": "Open the full formation window",
+      "deployedBadge": "Deployed for combat",
+      "orphanParty": "This party actor is not linked to any formation.",
+      "hurriedBadge": "per turn — hurrying at combat pace",
+      "paceHint": "Pace (RR p. 263): careful exploration (default — quiet, can map, probe with poles, and hastily search) or hurried at combat speed (about 3× the ground per turn, much more noise, and no mapping, poles, or hasty searching).",
+      "roundShort": "round",
+      "advanceRound": "Round",
+      "advanceRoundHint": "Mark off one bookkeeping round (1 minute; 10 per turn) — hasty actions like listening, hasty searching, bashing a door, or lighting a torch",
+      "downBadge": "Down (0 hp or less): carried, not walking — assign Carriers, or remove from the formation to abandon",
+      "blindBadge": "Cannot see (darkness, no dark senses): moves at 1/3 speed — RULES §4 blinded",
+      "editImageHint": "Change the party's image (updates the actor, its prototype token, and the placed token)"
+    },
+    "sheet": {
+      "party": "Party Formation Sheet"
+    },
+    "map": {
+      "section": "Maps & Cartography",
+      "sessionLabel": "Working map:",
+      "noSession": "No active map session — exploration is not being drawn onto a map object. Start one with \"New Map\" (requires a Mapper and viewing the party's scene).",
+      "notViewing": "view the party's scene to archive",
+      "newMap": "New Map",
+      "newMapHint": "Close the current map, wipe the scene's explored fog, and start a fresh map from black — used when the party loses its bearings (fell through a hole, teleported) or starts a new area.",
+      "newMapConfirm": "Start a new map? The scene's explored fog is reset for everyone — the party keeps only what the working map records, and only sees fresh exploration from here on.",
+      "archive": "Archive",
+      "archiveHint": "Copy the current explored area into the working Map item now (also happens automatically each dungeon turn while you view the scene).",
+      "archived": "Working map updated.",
+      "close": "Close Map",
+      "closeHint": "Final archive, then end the session. The Map item stays with its bearer — carry it, sell it, lose it.",
+      "saveFog": "Snapshot",
+      "saveFogHint": "Save your current fog view of this scene as a new (accurate) Map item in the sidebar — for authoring maps to sell or hand out.",
+      "anchor": "Anchor",
+      "anchorHint": "The party has connected its position to territory this map depicts (your judgment): reveal the map's recorded areas on the scene for everyone.",
+      "anchoredHint": "Anchored: this map's record has been revealed on the scene",
+      "distortedHint": "Drawn without Mapping proficiency: the record is subtly wrong and will misalign when anchored",
+      "needsScene": "View the party's scene to manage its map.",
+      "needsMapper": "Assign a Mapper role first — someone has to draw the map.",
+      "archiveNeedsScene": "View the party's scene to archive the map (it will retry each dungeon turn).",
+      "sessionStarted": "{mapper} unrolls a fresh sheet and begins a new map — the old bearings are gone.",
+      "sessionUnproficient": "The mapper lacks Mapping proficiency: this map's record is being distorted (hidden warp). It will misalign when anchored later.",
+      "sessionClosed": "The working map is rolled up and stowed.",
+      "sessionLostItem": "The working Map item is gone (traded, sold, or destroyed) — the map session has ended.",
+      "wrongScene": "That map depicts {scene} — it cannot be anchored here.",
+      "emptyMap": "That map has nothing recorded on it yet.",
+      "anchored": "The party matches \"{name}\" against their surroundings — its recorded areas are revealed.",
+      "anchoredDistorted": "That map was drawn without Mapping proficiency — the revealed areas are subtly misaligned against the true dungeon. Let them discover the discrepancies.",
+      "authoredDescription": "<p>A drawn map of {scene}.</p><p><em>Its recorded territory is stored on this item. When the party can match it to their surroundings, the Judge anchors it from the party sheet to reveal the mapped area.</em></p>",
+      "authored": "Map item \"{name}\" created in the Items sidebar.",
+      "itemName": "Map of {scene}",
+      "itemDescription": "<p>A working map of {scene}, drawn in the field by {mapper}.</p><p><em>The recorded exploration is stored on this item and updates each dungeon turn. Whoever holds it holds the map: trade or loot it freely. When the party can match it to their surroundings, the Judge anchors it from the party sheet to reveal its territory.</em></p>",
+      "openHint": "Open the Map item's sheet",
+      "reasonAnchored": "Already anchored on this scene",
+      "reasonEmpty": "Nothing recorded on this map yet (it archives each dungeon turn while the GM views the scene)",
+      "reasonScene": "This map depicts a different scene than the party's",
+      "reasonViewing": "View the party's scene to anchor (the fog texture only exists for the viewed scene)",
+      "statusLine": "Working record updated at turn {turns} of exploring {scene}. The drawn map itself is stored on this item — carry, sell, or loot it; a Judge can Anchor it from the party sheet to reveal its territory."
+    },
+    "rolls": {
+      "rowLabel": "Party rolls:",
+      "viaAdventuring": "Adventuring",
+      "success": "success",
+      "failure": "failure",
+      "listen": "Listen",
+      "listenHint": "1 round (marked off). Every member rolls Listening with their own sheet target. RAW: only the closest member's result applies; once per turn while moving.",
+      "listenNote": "Only the member closest to the sound may apply their result (RR p. 265). Once per turn while the party is moving.",
+      "alreadyListened": "The party already listened this turn while moving — once per turn (10 minutes); it takes time to settle into quiet (RR p. 265). A stationary party may keep listening.",
+      "searchHasty": "Hasty Search",
+      "searchHastyHint": "1 round (marked off). Only members with a Searching skill may hastily search — Adventuring is not permitted (RR p. 265).",
+      "searchHastyNote": "1 round, 5' reach (10' with pole). A failed hasty search cannot be repeated until the searcher gains a level.",
+      "searchMethodical": "Methodical Search",
+      "searchMethodicalHint": "Takes 1 full turn (advanced automatically). Skill users roll at +4; anyone else uses their Adventuring target (18+).",
+      "searchMethodicalNote": "1 turn (10 minutes, marked off automatically), 5' reach (10' with pole). May be repeated.",
+      "bash": "Bash Door",
+      "bashHint": "1 round (marked off). Dungeonbashing with ±4 per point of STR modifier (crowbar +2 and size modifiers applied by the Judge).",
+      "bashNote": "Stuck doors, 1 round. Crowbar grants +2 (add manually); two adventurers use the stronger STR modifier +4. Botch (1) deals 1d6 damage.",
+      "nobodyCapable": "No member can attempt {check} (no matching skill on any sheet).",
+      "notCapable": "Cannot attempt (no skill): {names}",
+      "viaAlertness": "Adventuring (Alertness 14+)",
+      "tracking": "Track",
+      "trackingHint": "Takes 1 turn (advanced automatically). Only members with the Tracking proficiency roll (base 11+, adjusted by the Judge for numbers, ground, weather, and light).",
+      "trackingNote": "1 turn (10 minutes, marked off automatically). On a failure the area cannot be searched for tracks again for one hour. Judge modifiers: +2/+4/+6/+8 by group size, +4 soft ground, -8 rocky, -1 per 12h of weather, -4 per hour of rain/snow, -4 dim light.",
+      "noHastyHurried": "The party is hurrying at combat speed — hasty searching is not possible (RR p. 263). Slow to a careful pace first.",
+      "partMethodical": "methodical",
+      "partAlertness": "Alertness",
+      "partTrapfinding": "Trapfinding"
+    },
+    "request": {
+      "section": "Declare Actions",
+      "hint": "Declarations are sent to the Judge's client for execution; a GM must be connected. Search and listen results go to the Judge.",
+      "sent": "Declared — sent to the Judge.",
+      "noGM": "No GM is connected — actions cannot be executed right now.",
+      "declared": "{user} declares: {action}",
+      "light": "light a {light} carried by {bearer}",
+      "lightHint": "Light a torch, lantern, or candle carried by your character (consumes one from inventory)",
+      "spell": "{caster} casts {spell} ({turns} turns tracked)",
+      "spellHint": "Add one of your character's spells to the formation's duration tracker",
+      "rest": "the party rests for a turn",
+      "restHint": "Declare a rest turn (resets the rest clock; recovers winded)",
+      "check": "a party {check}"
+    },
+    "role": {
+      "mapper": "Mapper",
+      "mapperHint": "Maps the dungeon: needs bright light, both hands occupied, vulnerable while mapping. With Mapping proficiency the Judge gives accurate measurements.",
+      "scout": "Scout",
+      "scoutHint": "Moves ahead of the front rank in trap-heavy areas (usually a thief; hasty-searches within 5', 10' with a pole)",
+      "rearguard": "Rear Guard",
+      "rearguardHint": "Fast-moving or missile-equipped members watching the party's back",
+      "pole": "10' Pole",
+      "poleHint": "Probes ahead: the pole counts as an adventurer moving 5' ahead of its bearer for trap activation",
+      "noncombatant": "Non-combatant",
+      "noncombatantHint": "Stays with the party token when combat begins and is not added to the initiative tracker",
+      "carrier": "Carrier",
+      "carrierHint": "Carries the down: the carried count as 7 3/6 stone plus half their equipment (the rescue rule), split evenly among Carriers — the load slows the carriers' pace and therefore the party's"
+    },
+    "light": {
+      "torch": "Torch",
+      "lantern": "Lantern",
+      "candle": "Candle"
+    },
+    "winded": {
+      "effectName": "Winded",
+      "effectDescription": "Cannot charge or run until resting for 1 turn (10 minutes). ACKS II RR p. 271."
+    },
+    "chat": {
+      "turnAdvanced": "{n} dungeon turn(s) pass",
+      "turnRested": "the party rests for {n} turn(s)",
+      "byMovement": "by movement",
+      "manual": "manual",
+      "elapsed": "Delve time: {turns} turns ({time})",
+      "restStatus": "Turns since rest: {n}/{max}",
+      "windedStatus": "The party is WINDED — no charging or running until it rests 1 turn",
+      "becameWinded": "More than 5 turns without rest — the party is now winded!",
+      "restedRecovered": "The party has rested and is no longer winded.",
+      "lightStatus": "{light} ({bearer}): {turns} turns left",
+      "lightGuttering": "{bearer}'s {light} is guttering — one turn of light remains!",
+      "lightOut": "{bearer}'s {light} burns out!",
+      "noLight": "No lit light source!",
+      "effectExpired": "{actor}: \"{effect}\" has expired",
+      "dayPassed": "A full day of delve time has passed — consume rations and check spell recovery.",
+      "encounterCheck": "wandering monster throw (encounter on {target}+)",
+      "inZone": "in zone \"{name}\"",
+      "encounterTriggered": "Wandering monsters!",
+      "encounterDetail": "Maximum encounter distance {distance}' (2d6×10). Occurs at minute {minute} of the turn (1d10). Roll on the dungeon's encounter table and follow the encounter procedure (distance → reactions → surprise).",
+      "rationsTitle": "rations consumed",
+      "rationsMissing": "No rations found for: {names}",
+      "saveTitle": "{save} saving throw",
+      "saveMagical": "magical",
+      "saveMundane": "mundane",
+      "fogLost": "With no one mapping, the party's map of {scene} fades — the fog of war closes back in. Assign a Mapper (with a lit light source) to keep explored areas revealed.",
+      "fogRestored": "The mapper takes up the quill — explored areas of {scene} stay revealed on the map.",
+      "spellExpired": "{caster}'s \"{spell}\" has expired!",
+      "spellEnding": "{caster}'s \"{spell}\" is in its final turn!",
+      "spellStatus": "{spell} ({caster}): {turns} turns left",
+      "combatDeployed": "The formation breaks for battle — {n} member(s) deployed to the combat tracker.",
+      "combatReformed": "Combat over ({rounds} round(s)) — the party reforms into formation.",
+      "combatFallen": "Down and gathered up with the party: {names}. Assign Carriers to bring them along, or remove them from the formation to abandon them where they fell.",
+      "combatNoCombatants": "No deployable members (all non-combatants or without tokens) — party token left in the tracker.",
+      "bigMove": "That drag consumed {turns} turns. If that was repositioning rather than exploration, use the undo-turn button or pause tracking.",
+      "hurriedStatus": "Hurrying at combat speed: much more noise (earshot as walking/talking or worse), no mapping, no 10' poles, no hasty searching (RR p. 263)",
+      "encounterNowTitle": "The rolled encounter occurs NOW",
+      "encounterNow": "The wandering monsters arrive at minute {minute} of the turn — interrupt the party's movement here and run the encounter.",
+      "signature": "Party signature: {light}, {noise} — applies to surprise and earshot (RR pp. 265–266)",
+      "sigLit": "light visible",
+      "sigDark": "no visible light",
+      "sigLoud": "hurried and loud",
+      "sigQuiet": "careful and quiet"
+    },
+    "warnings": {
+      "inCombat": "Members are deployed for combat — the party reforms automatically when the combat ends.",
+      "noMapper": "No mapper assigned — without a map the party risks getting lost (assign the Mapper role).",
+      "mapperNoLight": "The mapper has no lit light source — mapping requires bright light.",
+      "mapperNoProficiency": "The mapper lacks the Mapping proficiency — the Judge gives only vague measurements and the mapper cannot passively notice map errors (RR p. 264).",
+      "noLight": "No lit light source — the party cannot see (unless members have shadowy senses or lightless vision).",
+      "winded": "Winded: the party cannot charge or run until it rests for 1 turn.",
+      "restDue": "5 turns without rest — the party must rest 1 turn now or become winded.",
+      "poleNoItem": "{name} has the 10' Pole role but no pole or polearm in inventory.",
+      "downNoCarrier": "DOWN with no Carriers: {names} — the party cannot bring them along (assign the Carrier role, or remove them from the formation to abandon them).",
+      "carrying": "Carrying {names}: {stone} stone total, split among {carriers} Carrier(s) ({share} st each) — carrier pace is recomputed with the load.",
+      "darkBlinded": "Darkness: {blinded} cannot see and move at 1/3 speed (blinded). Seeing in the dark: {sighted}.",
+      "darkSighted": "Darkness: the whole party operates on dark senses ({sighted}). No mapping or reading without bright light.",
+      "carrierLine": "{name}: {base}→{eff} st (cap {cap}) — {speed}'/turn.",
+      "carrierOver": "{name}: {base}→{eff} st EXCEEDS capacity {cap} — CANNOT MOVE."
+    },
+    "hud": {
+      "addToParty": "Add to party (adds all controlled tokens; creates a formation if the scene has none)"
+    },
+    "warn": {
+      "noFormationYet": "No formation exists yet — right-click a token and use \"Add to party\", or create a Party Formation actor.",
+      "duplicatePartyToken": "This formation already has a party token on the canvas — delete it first to re-place the party.",
+      "alreadyMember": "{name} is already in the formation.",
+      "noSelection": "No eligible tokens selected.",
+      "overburdened": "Party exploration speed is 0 — someone is overburdened!",
+      "noLightItem": "{bearer} has no {light} (or oil) in inventory — lighting it anyway.",
+      "spellNeedsName": "Pick a spell or enter a name to track.",
+      "spellNeedsTurns": "Enter a duration in turns (the spell's duration couldn't be parsed).",
+      "noPoleItem": "{name} has no pole or polearm in inventory — the 10' Pole role needs the physical implement."
+    },
+    "controls": {
+      "open": "Exploration Formation"
+    },
+    "settings": {
+      "partyTokenImage": {
+        "name": "Party token image",
+        "hint": "Image used for the party token and party actor."
+      },
+      "playersMoveParty": {
+        "name": "All players can move the party token",
+        "hint": "Coarse override: grants every player owner rights on party actors. Normally unnecessary — players who own a member of a formation automatically get vision through, and control of, its party token."
+      },
+      "advanceWorldTime": {
+        "name": "Advance world time",
+        "hint": "Advance the Foundry world clock by 10 minutes per dungeon turn (keeps Active Effect durations and calendar modules in sync)."
+      },
+      "publicTurnCards": {
+        "name": "Public turn summaries",
+        "hint": "Post the per-turn summary card publicly. Wandering-monster throws are always GM-whispered. Disable to whisper everything to the GM."
+      },
+      "consumeLightItems": {
+        "name": "Consume light items",
+        "hint": "When lighting a torch/candle/lantern, decrement a matching inventory item (oil flask for lanterns) from the bearer."
+      },
+      "encounterEvery": {
+        "name": "Wandering monster throw frequency (turns)",
+        "hint": "Make an encounter throw every N dungeon turns. RAW: 2. Set 0 to disable automatic throws."
+      },
+      "encounterTarget": {
+        "name": "Wandering monster target value",
+        "hint": "Encounter occurs on this value or higher on 1d6. RAW: 6."
+      },
+      "manageFog": {
+        "name": "Tie fog of war to the mapper",
+        "hint": "Fog exploration on a scene is fully disabled — neither shown nor recorded — unless a formation there has a member with the Mapper role. Current vision still shows. The scene's original fog mode is restored when the formation leaves or disbands. Scenes whose fog was already off are left alone."
+      },
+      "mapperNeedsLight": {
+        "name": "Mapper requires a lit light source",
+        "hint": "Per the rules, mapping requires bright light. When enabled, the map (fog exploration) is only retained while the formation also has a lit torch, lantern, or candle."
+      },
+      "syncTokenLight": {
+        "name": "Party token emits light",
+        "hint": "The party token automatically emits the brightest lit light source's light (torch/lantern 15'/30', candle 5'/10'), so players can see where they are even without a mapper."
+      },
+      "fuzzMeasurement": {
+        "name": "Fuzz player measurements without a proficient mapper",
+        "hint": "On scenes where the formation's mapper lacks Mapping proficiency, players' ruler and drag distances show a hidden consistent error (~×0.8–1.25, rounded to the grid); with no working mapper at all they show \"?\". GMs always see true values. Players can still count grid squares — this is a deterrent, not a lock."
+      },
+      "signalAffectsEncounters": {
+        "name": "Light & noise modify encounter throws (optional)",
+        "hint": "NOT in the reference extracts (light/noise affect surprise and earshot per RR pp. 265-266; the encounter-rate rule, if any, is in the encounter chapter). When enabled: hurried parties +1 on the 1d6 throw, dark and careful parties -1. Off = RAW-as-extracted."
+      }
+    },
+    "audit": {
+      "title": "Skill Audit",
+      "openHint": "Skill audit: see exactly how each party roll resolves per member, and flag custom skill items",
+      "hint": "How each party roll resolves for every member — the item or Adventuring target used, auto-scaled level, and bonuses. Rolls always use these live values.",
+      "resolution": "Resolution (target+ / source)",
+      "member": "Member",
+      "items": "Ability items & custom skills",
+      "itemsHint": "Flag ANY ability item to participate in a party roll (Used for), auto-scale on a thief progression, or scale at a fraction of the owner's level (e.g. 0.5 = as a thief of half class level). Unflagged items match by name and use their sheet target.",
+      "item": "Item",
+      "sheetTarget": "Sheet target",
+      "usedFor": "Used for",
+      "progression": "Progression",
+      "factor": "Level factor",
+      "flagNone": "— by name —",
+      "fixedTarget": "— fixed target —",
+      "noItems": "No ability items.",
+      "table": "Thief skill progression (levels 1–14, RR p. 31)",
+      "tableHint": "Auto-scaled targets come from these rows at ceil(level × factor).",
+      "sheetSection": "Party Rolls (ACKS Formations)",
+      "sheetCurrent": "Currently resolves for {name}: {target}",
+      "tab": "Skill",
+      "tabNotSkill": "Not flagged as a party-roll skill. Set \"Used for\" to make this item participate in a party roll.",
+      "progressionRow": "Progression by level",
+      "isSkill": "Skill",
+      "isSkillHint": "Mark this proficiency as a skill for party rolls. Turns on the Skill tab showing its progression, level factor, and live resolved target.",
+      "effectiveRow": "{name} is level {level}; ×{factor} factor → progression row L{row}."
+    }
+  }
+}

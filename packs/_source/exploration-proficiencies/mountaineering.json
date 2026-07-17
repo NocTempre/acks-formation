@@ -1,0 +1,35 @@
+{
+  "_id": "acksfmProfMountn",
+  "_key": "!items!acksfmProfMountn",
+  "name": "Mountaineering",
+  "type": "ability",
+  "img": "icons/svg/book.svg",
+  "system": {
+    "proficiencytype": "general",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "",
+    "rollType": "above",
+    "rollTarget": 0,
+    "blindroll": false,
+    "description": "<p>Uses mountaineering gear (grapple, hand axe, hammer, 6 iron spikes, 50' rope each) to lead up to 30 characters on climbs: the party climbs, rappels, and traverses as thieves of his class level; with Climbing too, his own throws fail only on an unmodified 1.</p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "explorationProficiency": true
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

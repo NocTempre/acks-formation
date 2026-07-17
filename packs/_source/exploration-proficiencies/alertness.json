@@ -1,0 +1,35 @@
+{
+  "_id": "acksfmProfAlert0",
+  "_key": "!items!acksfmProfAlert0",
+  "name": "Alertness",
+  "type": "ability",
+  "img": "icons/svg/book.svg",
+  "system": {
+    "proficiencytype": "general",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "",
+    "rollType": "above",
+    "rollTarget": 0,
+    "blindroll": false,
+    "description": "<p>+1 bonus to avoid surprise. When using Adventuring proficiency to search or listen, succeeds on 14+ (instead of 18+); if separately proficient in Searching or Listening, gains +2 to the throw instead. <em>Automated: the formation's Listen/Search party rolls detect this item and improve the member's target/bonus.</em></p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "explorationProficiency": true
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

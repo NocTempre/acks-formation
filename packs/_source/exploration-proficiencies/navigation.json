@@ -1,0 +1,35 @@
+{
+  "_id": "acksfmProfNavigt",
+  "_key": "!items!acksfmProfNavigt",
+  "name": "Navigation",
+  "type": "ability",
+  "img": "icons/svg/book.svg",
+  "system": {
+    "proficiencytype": "general",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "",
+    "rollType": "above",
+    "rollTarget": 0,
+    "blindroll": false,
+    "description": "<p>Reads sun and stars: +4 bonus on proficiency throws to avoid getting lost in the wilderness. Stacks with Pathfinding. With Seafaring, can serve as ship's navigator.</p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "explorationProficiency": true
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "_id": "acksfmSklPickpkt",
+  "_key": "!items!acksfmSklPickpkt",
+  "name": "Pickpocketing",
+  "type": "ability",
+  "img": "icons/svg/daze.svg",
+  "system": {
+    "proficiencytype": "class",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "1d20",
+    "rollType": "above",
+    "rollTarget": 17,
+    "blindroll": false,
+    "description": "<p>Picks pockets and cuts purses within 5': +4 if the target is unaware. Success lifts one pocket's contents or one hung item/tiny/small weapon. On a natural 1 or a roll below half the target value, the victim notices (reaction roll at -3).</p><p><em>Auto-scales with the owner's class level in party rolls (RR p. 31):</em> L1: 17+ · L2: 16+ · L3: 15+ · L4: 14+ · L5: 13+ · L6: 12+ · L7: 10+ · L8: 8+ · L9: 6+ · L10: 4+ · L11: 2+ · L12: 0+ · L13: -2+ · L14: -4+. <em>For a class using the skill at half level, set the module's levelFactor flag to 0.5.</em></p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "thiefSkill": "pickpocketing",
+      "levelFactor": 1
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

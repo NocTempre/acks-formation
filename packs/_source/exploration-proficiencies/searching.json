@@ -1,0 +1,36 @@
+{
+  "_id": "acksfmSklSearch0",
+  "_key": "!items!acksfmSklSearch0",
+  "name": "Searching",
+  "type": "ability",
+  "img": "icons/svg/daze.svg",
+  "system": {
+    "proficiencytype": "class",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "1d20",
+    "rollType": "above",
+    "rollTarget": 18,
+    "blindroll": false,
+    "description": "<p>Finds concealed traps, secret doors, obscured objects, buried treasure, and other hidden features (Judge rolls in secret). <strong>Hastily</strong>: 1 round, 5' reach (10' with a pole); a failed hasty search cannot be repeated until the next level; automatic while moving at exploration speed when passing within reach of a hidden feature. <strong>Methodically</strong>: 1 turn, +4 bonus, repeatable. <em>Automated: matched by the Search party rolls.</em></p><p><em>Auto-scales with the owner's class level in party rolls (RR p. 31):</em> L1: 18+ · L2: 17+ · L3: 16+ · L4: 15+ · L5: 14+ · L6: 13+ · L7: 11+ · L8: 9+ · L9: 7+ · L10: 5+ · L11: 3+ · L12: 1+ · L13: -1+ · L14: -3+. <em>For a class using the skill at half level, set the module's levelFactor flag to 0.5.</em></p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "thiefSkill": "searching",
+      "levelFactor": 1
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "_id": "acksfmProfTrappg",
+  "_key": "!items!acksfmProfTrappg",
+  "name": "Trapping",
+  "type": "ability",
+  "img": "icons/svg/book.svg",
+  "system": {
+    "proficiencytype": "general",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "",
+    "rollType": "above",
+    "rollTarget": 0,
+    "blindroll": false,
+    "description": "<p>Finds and removes wilderness traps as a thief of half his class level (rounded up); +2 vs wilderness traps if also proficient in Searching or Trapfinding. Crafts crude wilderness traps at 1sp per hour.</p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "explorationProficiency": true
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

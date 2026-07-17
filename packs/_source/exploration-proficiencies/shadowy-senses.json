@@ -1,0 +1,33 @@
+{
+  "_id": "acksfmSklShadowS",
+  "_key": "!items!acksfmSklShadowS",
+  "name": "Shadowy Senses",
+  "type": "ability",
+  "img": "icons/svg/daze.svg",
+  "system": {
+    "proficiencytype": "class",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "",
+    "rollType": "above",
+    "rollTarget": 0,
+    "blindroll": false,
+    "description": "<p>Night-vision, keen hearing and smell, and echolocation: at combat or exploration speed the thief \"sees\" as if carrying a source shedding dim light in a 30' radius. Usable to fight and probe for traps; cannot discern colors, faces, markings, flat images, or writing. Does not function while charging or running, deafened, in bright light, or in magical darkness/silence. Opponents can hide from it (counts as dim light).</p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {}
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

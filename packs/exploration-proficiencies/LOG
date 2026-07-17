@@ -1,0 +1,5 @@
+2026/07/17-14:39:08.129 26e4 Delete type=3 #1
+2026/07/17-14:39:08.137 ae4c Level-0 table #5: started
+2026/07/17-14:39:08.141 ae4c Level-0 table #5: 9857 bytes OK
+2026/07/17-14:39:08.142 ae4c Delete type=0 #3
+2026/07/17-14:39:08.143 ae4c Manual compaction at level-0 from '!items!acksfmProfAlert0' @ 72057594037927935 : 1 .. '!items!acksfmSklTrapbrk' @ 0 : 0; will stop at (end)

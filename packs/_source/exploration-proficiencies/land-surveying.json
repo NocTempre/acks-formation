@@ -1,0 +1,35 @@
+{
+  "_id": "acksfmProfLandSv",
+  "_key": "!items!acksfmProfLandSv",
+  "name": "Land Surveying",
+  "type": "ability",
+  "img": "icons/svg/book.svg",
+  "system": {
+    "proficiencytype": "general",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "1d20",
+    "rollType": "above",
+    "rollTarget": 14,
+    "blindroll": false,
+    "description": "<p>Passively scans for collapses, deadfalls, rock slides, and sinkholes while moving at expedition or exploration speed (secret throw, 14+). Methodically survey up to 10,000 sq ft in one turn at 10+. Can assess hex land value and lair counts.</p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "explorationProficiency": true
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

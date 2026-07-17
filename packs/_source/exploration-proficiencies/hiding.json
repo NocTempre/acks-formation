@@ -1,0 +1,36 @@
+{
+  "_id": "acksfmSklHiding0",
+  "_key": "!items!acksfmSklHiding0",
+  "name": "Hiding",
+  "type": "ability",
+  "img": "icons/svg/daze.svg",
+  "system": {
+    "proficiencytype": "class",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "1d20",
+    "rollType": "above",
+    "rollTarget": 19,
+    "blindroll": false,
+    "description": "<p>Skulks unseen in cover, dim light, or darkness (begin as a combat action; Judge rolls in secret — the thief always believes he succeeded). While stationary in concealment, opponents suffer -2 to surprise regardless. Hidden: no line of sight may be claimed; melee vs the thief at -4 if his general location is known. Expires on moving or attacking.</p><p><em>Auto-scales with the owner's class level in party rolls (RR p. 31):</em> L1: 19+ · L2: 18+ · L3: 17+ · L4: 16+ · L5: 15+ · L6: 14+ · L7: 12+ · L8: 10+ · L9: 8+ · L10: 6+ · L11: 4+ · L12: 2+ · L13: 0+ · L14: -2+. <em>For a class using the skill at half level, set the module's levelFactor flag to 0.5.</em></p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "thiefSkill": "hiding",
+      "levelFactor": 1
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}

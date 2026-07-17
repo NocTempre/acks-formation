@@ -1,0 +1,113 @@
+{
+  "id": "acks-formation",
+  "title": "ACKS II — Exploration Formations",
+  "description": "Condenses the party into exploration formations for cleaner dungeon delving. Members join a formation and are represented on the canvas by a single party token that moves at exploration speed. Movement automatically consumes dungeon turns (10 minutes), driving light-source burn, rest requirements, wandering-monster checks, spell-duration expiry, and ration tracking per the ACKS II dungeon delve sequence of play.",
+  "version": "0.18.3",
+  "socket": true,
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14.364"
+  },
+  "authors": [
+    {
+      "name": "NocTempre"
+    }
+  ],
+  "license": "LICENSE",
+  "documentTypes": {
+    "Actor": {
+      "party": {}
+    },
+    "RegionBehavior": {
+      "encounterZone": {}
+    }
+  },
+  "esmodules": [
+    "scripts/module.mjs"
+  ],
+  "styles": [
+    "styles/formation.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "packs": [
+    {
+      "name": "exploration-proficiencies",
+      "label": "ACKS Exploration Proficiencies",
+      "path": "packs/exploration-proficiencies",
+      "type": "Item",
+      "system": "acks",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
+    },
+    {
+      "name": "macros",
+      "label": "Formation Macros",
+      "path": "packs/macros",
+      "type": "Macro",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "acks",
+        "type": "system",
+        "compatibility": {
+          "minimum": "13"
+        }
+      }
+    ],
+    "requires": [
+      {
+        "id": "lib-wrapper",
+        "type": "module",
+        "reason": "Wraps ruler measurement labels safely alongside other ruler modules.",
+        "compatibility": {
+          "minimum": "1.12.0"
+        }
+      },
+      {
+        "id": "socketlib",
+        "type": "module",
+        "reason": "Routes player action requests and fog-reload messages between clients.",
+        "compatibility": {
+          "minimum": "1.1.0"
+        }
+      }
+    ],
+    "recommends": [
+      {
+        "id": "simple-timekeeping",
+        "type": "module",
+        "reason": "Shared world clock, calendar, and scene-darkness sync for dungeon turns. Optional: turns still advance core world time without it.",
+        "compatibility": {
+          "minimum": "2.0.0"
+        }
+      },
+      {
+        "id": "acks-monsters",
+        "type": "module",
+        "reason": "Full Monster Sheet supplies structured vision modes, special senses, and Speed tables so monster party members use their real dark sight and movement instead of human defaults. Optional: generic heuristics apply without it."
+      }
+    ]
+  },
+  "url": "https://github.com/NocTempre/acks-formation",
+  "manifest": "https://github.com/NocTempre/acks-formation/releases/latest/download/module.json",
+  "download": "https://github.com/NocTempre/acks-formation/releases/latest/download/module.zip",
+  "flags": {
+    "acks-formation": {
+      "idPrefix": "acksfm"
+    }
+  }
+}

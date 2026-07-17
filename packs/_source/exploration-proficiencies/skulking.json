@@ -1,0 +1,35 @@
+{
+  "_id": "acksfmProfSkulk0",
+  "_key": "!items!acksfmProfSkulk0",
+  "name": "Skulking",
+  "type": "ability",
+  "img": "icons/svg/book.svg",
+  "system": {
+    "proficiencytype": "general",
+    "favorite": false,
+    "pattern": "white",
+    "requirements": "",
+    "roll": "",
+    "rollType": "above",
+    "rollTarget": 0,
+    "blindroll": false,
+    "description": "<p>+2 bonus on Hiding and Sneaking proficiency throws. Sneaking above 1/2 combat speed at only -2 (instead of -5); sneaking while running at -5 (instead of -10).</p>",
+    "save": "",
+    "_schemaVersion": 3
+  },
+  "effects": [],
+  "flags": {
+    "acks-formation": {
+      "explorationProficiency": true
+    }
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_stats": {
+    "coreVersion": "13",
+    "createdTime": 1784313548026,
+    "modifiedTime": 1784313548026
+  }
+}
