@@ -162,27 +162,44 @@ tagged `kw:lightlessvision` upstream. My pattern does treat Shadowy Senses as a
 dark sense. That is a **content gap, not necessarily my error** — flagging it for
 the chef pass rather than changing behavior here.
 
-### 4.2 Attunement to Nature `+4` on Listening is unverified — **likely invented rule**
+### 4.2 Attunement to Nature `+4` on Listening — **RESOLVED: this module was right, cookbook fixed upstream**
 
-`party-rolls.mjs` grants `+4` (not `+2`) on listening when the actor has
-Attunement to Nature:
+Initially flagged as a possible invented rule, because the register listed
+`kw:alertness` on **alertness, alienSenses, keenInsectSenses, mindfulness** but
+not `attunementToNature`, whose node was a stub with no provides, effects or
+rolls.
 
-```js
-const ATTUNEMENT_PATTERN = /attunement to nature/i;
-```
+Re-checked against the source. This module's local rules extract
+(`acks-rules/acks-formation/PROFICIENCIES.md`) records the asymmetric reading,
+and re-reading JJ p.311 through acks-content's own extractor confirms it: the
+entry grants a wilderness surprise bonus, the Adventuring search/listen throw at
+the improved target, and — for a character *separately proficient* — one value
+for Searching and a **larger** one for Listening. `party-rolls.mjs` is correct.
 
-The register lists `kw:alertness` as provided by **alertness, alienSenses,
-keenInsectSenses, mindfulness** — and **not** `attunementToNature`, whose node
-carries no `provides`, no effects and no rolls. So there is no upstream evidence
-that Attunement to Nature is an Alertness-equivalent at all, let alone at +4.
+**Why the register missed it, and why the obvious fix would have been wrong.**
+The compiler auto-aliases powers whose prose cross-references another entry, and
+that is how the other three got `kw:alertness`. Its alias scan *correctly
+declined* to alias Attunement — because it is not one. Alias it and it inherits
+Alertness's Listening value, which is the wrong number. What was missing was a
+per-entry recipe, which is precisely the *"scans locate, recipes interpret"*
+case: the asymmetry is a judgment no generic scan can make.
 
-That node is unaudited, so this is not proof of absence — but under *"never
-invent a rule"* the burden is on the claim. Recommend demoting to a clearly
-labelled optional house rule (or removing) pending the chef pass on
-`def.power.attunementToNature`.
+**Action taken** (acks-content `e4b98aa`): authored the recipe — `rolls` spec
+for the Adventuring target (modelled as a roll, matching `def.prof.alertness`),
+three `effects` specs (wilderness surprise; `modifies kw:searching` and
+`modifies kw:listening`, both `mode:"replace"` since the "instead" clauses
+substitute for the Adventuring throw), and `meta.provides: [kw:alertness]` so
+the two cannot stack. Locators only, no value off the page. Verified through
+`tools/merge-recipes.mjs` against the reference PDF — all four materialize, 0
+rejected. **Not** marked `audited`; merging makes an entry correct, sign-off is
+a separate act.
 
-By contrast the **Alertness `+2`-when-separately-skilled branch is sound** — it
-appears verbatim in the entry text and matches the acks-lib worked example
+Also corrected: this module's own extract carries a stale note claiming the +4
+was "applied as +2 — half a point of fidelity traded for one code path". The
+code has since implemented the full reading, so the note now understates it.
+
+By contrast the **Alertness `+2`-when-separately-skilled branch was already
+sound** — it appears in the entry text and matches the acks-lib worked example
 (`modifies … mode:"replace"`).
 
 ### 4.3 Trapfinding implements half its effect
@@ -193,9 +210,13 @@ so the trapbreaking half is unimplemented. Low impact (trap resolution is the
 separate traps module's job) but it should be a deliberate scope note rather
 than an omission.
 
-### 4.4 The compendium ships book values and close-paraphrase prose from a PUBLIC repo — **IP exposure**
+### 4.4 The compendium ships book values and close-paraphrase prose — **vetted acceptable; hygiene only**
 
-This is the most urgent finding and the strongest driver for retirement.
+> **Ruling (owner, 2026-07-19):** this content is already vetted as *not* an IP
+> leak as it stands. A history purge is a hygienic courtesy to perform **once a
+> replacement is fully in place** — not urgent containment. The description
+> below is retained as the factual record of what ships and why the migration
+> tidies it up; it is **not** an open risk item.
 
 `packs/_source/exploration-proficiencies/` ships, for 25 named proficiencies:
 
@@ -210,15 +231,9 @@ This is the most urgent finding and the strongest driver for retirement.
 Plus `scripts/constants.mjs` reproduces the **entire thief-skill progression
 table** (8 skills × 14 levels) as a literal array.
 
-`NocTempre/acks-formation` is **PUBLIC**. This is the same class of exposure that
-caused the sibling rules extracts to be purged and their repos made private on
-2026-07-16. It also directly violates the content pipeline's governing
-principle 2 — *values are assisted, never prebaked; a stat block's selection and
-arrangement of values is grey-zone IP; imported values live in the GM's world,
-never in the shipped artifact.*
-
 The cookbook exists precisely so these numbers materialize from each seat's own
-PDF. Retiring the compendium resolves the exposure; it is not merely cleanup.
+PDF, which is why the migration removes them from this repo as a side effect.
+Sequencing per the ruling: **replacement first, purge second.**
 
 **`npm run validate` reports `ip-scan: clean` on this — a false negative.**
 `tools/ip-scan.mjs` is deliberately structural (it holds no book text, so it
@@ -247,14 +262,10 @@ Phased, because deleting the pack breaks worlds whose actors reference its items
 and because the upstream mechanics are 1-of-28 audited — migrating binding onto
 unaudited data would trade a known-correct hardcode for an unverified one.
 
-**Phase 0 — contain the exposure (do first, independent of everything else).**
-Decide on the public-repo question in §4.4: strip values + prose from
-`packs/_source` and `THIEF_PROGRESSION`, or take the repo private, or both.
-This does not depend on the migration and should not wait for it.
-
-**Phase 1 — fix the local defects (no dependency on upstream).**
-Remove `night vision` from `DARK_SENSE_PATTERN` (§4.1); demote or remove the
-Attunement `+4` (§4.2); record the Trapfinding scope note (§4.3).
+**Phase 1 — fix the local defects (no dependency on upstream). DONE.**
+`night vision` removed from `DARK_SENSE_PATTERN` (§4.1). Attunement `+4`
+verified correct and the cookbook fixed upstream instead (§4.2). Trapfinding
+scope noted (§4.3).
 
 **Phase 2 — soft-deprecate the pack.**
 Mark `exploration-proficiencies` deprecated in `module.json`/docs and add
@@ -274,7 +285,8 @@ acks-content, and `levelFactor` with `PROGRESSION_LEVELS`. **Gated on** the
 relevant entries carrying `audited` sign-off — the burn-down is `1/28` today.
 
 **Phase 5 — remove the pack** once no shipped content references it and a
-migration path exists for worlds still holding its items.
+migration path exists for worlds still holding its items. The history purge
+(§4.4) is the hygienic tail of this phase, per the owner's sequencing.
 
 ---
 
