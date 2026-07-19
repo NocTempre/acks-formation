@@ -38,10 +38,17 @@
   "packs": [
     {
       "name": "exploration-proficiencies",
-      "label": "ACKS Exploration Proficiencies",
+      "label": "ACKS Exploration Proficiencies (Deprecated)",
       "path": "packs/exploration-proficiencies",
       "type": "Item",
       "system": "acks",
+      "flags": {
+        "acks-formation": {
+          "deprecated": true,
+          "supersededBy": "acks-abilities + acks-content",
+          "note": "Retiring — see docs/ABILITIES-AUDIT.md. Still shipped so existing worlds keep working; no new entries."
+        }
+      },
       "ownership": {
         "PLAYER": "OBSERVER",
         "ASSISTANT": "OWNER"
@@ -99,6 +106,16 @@
         "id": "acks-monsters",
         "type": "module",
         "reason": "Full Monster Sheet supplies structured vision modes, special senses, and Speed tables so monster party members use their real dark sight and movement instead of human defaults. Optional: generic heuristics apply without it."
+      },
+      {
+        "id": "acks-abilities",
+        "type": "module",
+        "reason": "Structured ability effect model (capabilities, level-aware effects). Supersedes this module's bundled exploration-proficiencies pack — see docs/ABILITIES-AUDIT.md."
+      },
+      {
+        "id": "acks-content",
+        "type": "module",
+        "reason": "Materializes proficiency targets and thief-skill progressions from the GM's own books, replacing this module's bundled values — see docs/ABILITIES-AUDIT.md."
       }
     ]
   },

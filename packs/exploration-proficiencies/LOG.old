@@ -1,0 +1,8 @@
+2026/07/18-21:30:28.670 9500 Recovering log #60
+2026/07/18-21:30:28.681 9500 Delete type=0 #60
+2026/07/18-21:30:28.681 9500 Delete type=3 #59
+2026/07/18-21:31:36.918 acd4 Level-0 table #64: started
+2026/07/18-21:31:36.918 acd4 Level-0 table #64: 0 bytes OK
+2026/07/18-21:31:36.920 acd4 Delete type=0 #62
+2026/07/18-21:31:36.930 acd4 Manual compaction at level-0 from '!items!acksfmProfAlert0' @ 72057594037927935 : 1 .. '!items!acksfmSklTrapbrk' @ 0 : 0; will stop at (end)
+2026/07/18-21:31:36.930 acd4 Manual compaction at level-1 from '!items!acksfmProfAlert0' @ 72057594037927935 : 1 .. '!items!acksfmSklTrapbrk' @ 0 : 0; will stop at (end)

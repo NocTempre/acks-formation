@@ -129,11 +129,16 @@ export const POLE_ITEM_PATTERN = /pole|polearm|spear|pike|halberd|glaive|lance
 export const BODY_STONE = 7.5;
 
 /**
- * Senses that work without light: shadowy senses (thief power), lightless
+ * Senses that work in TOTAL darkness: shadowy senses (thief power), lightless
  * vision / infravision, or spell effects granting the equivalent. Matched on
  * item AND active-effect names.
+ *
+ * Night Vision is deliberately NOT here: it upgrades dim light but fails in
+ * total dark (MM Overview pp. 12–13), which is how `monster-traits.mjs` treats
+ * it — one rule, one answer on both paths. Content corroborates: the register
+ * provides `kw:lightlessvision` on Infravision and Lightless Vision only.
  */
-export const DARK_SENSE_PATTERN = /shadowy\s*sense|lightless\s*vision|infravision|darkvision|night\s*vision|dark\s*sight/i;
+export const DARK_SENSE_PATTERN = /shadowy\s*sense|lightless\s*vision|infravision|darkvision|dark\s*sight/i;
 
 /** Inventory name matcher for ration items (1-day preferred over 1-week). */
 export const RATION_PATTERN = /ration/i;
