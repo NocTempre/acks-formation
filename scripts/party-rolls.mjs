@@ -1,6 +1,6 @@
 /* global game, foundry, ChatMessage, Roll, ui */
 import { MODULE_ID, THIEF_PROGRESSION } from "./constants.mjs";
-import { hasCapability, itemHasCapability } from "./ability-bridge.mjs";
+import { hasCapability, itemHasCapability, overrideFor } from "./ability-bridge.mjs";
 import { getMemberActor, hasAbility, isDown, isHurried, updateFormation } from "./formation-model.mjs";
 import { advanceRounds, advanceTurns } from "./turn-engine.mjs";
 
@@ -134,9 +134,17 @@ function loc(key, data = {}) {
 function skillCandidates(actor, cfg) {
   return actor.items.filter((i) => {
     if (i.type !== "ability") return false;
-    // Unchecking "Skill" on the item sheet withdraws it from party rolls
-    // even if its bindings remain (re-checking restores them).
-    if (i.getFlag?.(MODULE_ID, "isSkill") === false) return false;
+
+    // A GM ruling from the audit window is final in both directions, and
+    // outranks the per-item Skill checkbox — it is the surface that shows what
+    // automation decided, so it has to be able to overturn it.
+    const ruling = overrideFor(i);
+    if (ruling === false) return false;
+    if (ruling !== true) {
+      // Unchecking "Skill" on the item sheet withdraws it from party rolls
+      // even if its bindings remain (re-checking restores them).
+      if (i.getFlag?.(MODULE_ID, "isSkill") === false) return false;
+    }
 
     // 1. Capability — precise, and immune to renaming.
     if (cfg.capability && itemHasCapability(i, cfg.capability)) return true;

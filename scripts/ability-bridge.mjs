@@ -1,4 +1,4 @@
-/* global globalThis */
+/* global game, globalThis */
 
 /**
  * Capability-aware ability matching — the bridge to the abilities program
@@ -21,6 +21,8 @@
  * and every caller falls back to the name patterns, which is exactly the
  * pre-integration behaviour. Nothing here is required for the module to run.
  */
+
+import { MODULE_ID } from "./constants.mjs";
 
 const CONTENT_ID = "acks-content";
 const ABILITIES_ID = "acks-abilities";
@@ -74,6 +76,62 @@ export function itemHasCapability(item, token) {
   if (!l?.satisfies || !token) return false;
   const ref = abilityRef(item);
   return ref ? l.satisfies([ref], token) : false;
+}
+
+/* -------------------------------------------- */
+/*  GM overrides — the audit layer over the union */
+/* -------------------------------------------- */
+
+/**
+ * The union is deliberately generous, so the GM needs somewhere to see what it
+ * caught and overrule it. Overrides are stored world-scoped and keyed by
+ * ABILITY IDENTITY, not by item: "does Eavesdropping count as listening" is a
+ * ruling about the rules, not about one character's copy of the item, so one
+ * decision governs every copy in every party.
+ *
+ * Tri-state by absence: no entry means automation decides (the default), `true`
+ * forces the ability in, `false` forces it out. Resetting deletes entries
+ * rather than writing `true`, so "back to automated defaults" really is the
+ * automated default and not a snapshot of it.
+ */
+export const SETTING_ABILITY_OVERRIDES = "abilityOverrides";
+
+/**
+ * Identity of an ability for override purposes: its register definition id when
+ * it has one (stable across renames — the whole point), else its folded name.
+ */
+export function abilityKey(item) {
+  const id = item?.getFlag?.(CONTENT_ID, "cookbook")?.id;
+  if (id) return id;
+  return `name:${String(item?.name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+}
+
+function overrides() {
+  try {
+    return game.settings.get(MODULE_ID, SETTING_ABILITY_OVERRIDES) ?? {};
+  } catch {
+    return {}; // setting not registered yet (early call during init)
+  }
+}
+
+/** The GM's explicit ruling for this ability, or null when on automatic. */
+export function overrideFor(item) {
+  const v = overrides()[abilityKey(item)];
+  return typeof v === "boolean" ? v : null;
+}
+
+/** Record a ruling. `null` clears it, returning the ability to automation. */
+export async function setOverride(item, value) {
+  const all = { ...overrides() };
+  const key = abilityKey(item);
+  if (value === null) delete all[key];
+  else all[key] = !!value;
+  return game.settings.set(MODULE_ID, SETTING_ABILITY_OVERRIDES, all);
+}
+
+/** Clear every ruling — the reset the audit window offers. */
+export async function resetOverrides() {
+  return game.settings.set(MODULE_ID, SETTING_ABILITY_OVERRIDES, {});
 }
 
 /*

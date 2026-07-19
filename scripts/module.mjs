@@ -7,6 +7,7 @@ import {
   MODULE_ID,
 } from "./constants.mjs";
 import { onCombatEnd, onCombatRoundChange, onPartyCombatantCreated } from "./combat-bridge.mjs";
+import { SETTING_ABILITY_OVERRIDES } from "./ability-bridge.mjs";
 import { registerEncounterZone } from "./encounter-zone.mjs";
 import {
   SETTING_FORMATIONS,
@@ -158,6 +159,15 @@ Hooks.once("init", () => {
     config: true,
     type: Boolean,
     default: true,
+  });
+
+  // GM rulings from the Skill Audit window: which abilities party-roll
+  // automation may use. Absent key = automatic (see ability-bridge).
+  game.settings.register(MODULE_ID, SETTING_ABILITY_OVERRIDES, {
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {},
   });
 
   /* --- Encounter Zone region behavior --- */

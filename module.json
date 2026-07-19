@@ -2,7 +2,7 @@
   "id": "acks-formation",
   "title": "ACKS II — Exploration Formations",
   "description": "Condenses the party into exploration formations for cleaner dungeon delving. Members join a formation and are represented on the canvas by a single party token that moves at exploration speed. Movement automatically consumes dungeon turns (10 minutes), driving light-source burn, rest requirements, wandering-monster checks, spell-duration expiry, and ration tracking per the ACKS II dungeon delve sequence of play.",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "socket": true,
   "compatibility": {
     "minimum": "14",

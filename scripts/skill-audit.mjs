@@ -1,5 +1,6 @@
 /* global game, foundry, fromUuidSync, Hooks, document */
 import { MODULE_ID, THIEF_PROGRESSION } from "./constants.mjs";
+import { abilityKey, itemHasCapability, overrideFor, resetOverrides, setOverride } from "./ability-bridge.mjs";
 import { getFormation, getMemberActor, realMembers } from "./formation-model.mjs";
 import { PARTY_CHECKS, resolveCheck } from "./party-rolls.mjs";
 
@@ -27,6 +28,33 @@ export default class SkillAuditApp extends HandlebarsApplicationMixin(Applicatio
     classes: ["acks-formation", "skill-audit"],
     window: { resizable: true, title: "ACKS-FORMATION.audit.title" },
     position: { width: 640, height: 640 },
+    actions: {
+      /** Flip one ability's ruling: automatic → off → on → automatic. */
+      async toggleAbility(event, target) {
+        if (!game.user.isGM) return;
+        const item = fromUuidSync(target.closest("[data-item-uuid]")?.dataset.itemUuid);
+        if (!item) return;
+        const current = overrideFor(item);
+        // Cycle through the three real states rather than hiding "automatic"
+        // behind a binary: a GM who overrode something must be able to hand it
+        // back to automation without hunting for the global reset.
+        const next = current === null ? false : current === false ? true : null;
+        await setOverride(item, next);
+        this.render();
+      },
+
+      /** Drop every ruling — back to what automation decides on its own. */
+      async resetAbilityOverrides() {
+        if (!game.user.isGM) return;
+        const confirmed = await foundry.applications.api.DialogV2.confirm({
+          window: { title: game.i18n.localize("ACKS-FORMATION.audit.reset") },
+          content: `<p>${game.i18n.localize("ACKS-FORMATION.audit.resetConfirm")}</p>`,
+        });
+        if (!confirmed) return;
+        await resetOverrides();
+        this.render();
+      },
+    },
   };
 
   static PARTS = {
@@ -97,6 +125,7 @@ export default class SkillAuditApp extends HandlebarsApplicationMixin(Applicatio
           })),
       }));
 
+    context.abilities = collectPartyAbilities(formation);
     context.progressionTable = Object.entries(THIEF_PROGRESSION).map(([key, values]) => ({
       key,
       values: values.join(" / "),
@@ -125,6 +154,79 @@ export default class SkillAuditApp extends HandlebarsApplicationMixin(Applicatio
       });
     }
   }
+}
+
+/* -------------------------------------------- */
+/*  Party ability roster (the union's audit)    */
+/* -------------------------------------------- */
+
+/**
+ * Every distinct ability in the party, once — the surface for auditing what the
+ * candidate union actually caught.
+ *
+ * "Distinct" is by ability IDENTITY (register id, else folded name), so two
+ * members carrying Searching are one row with one ruling. For each row we
+ * report not just WHETHER automation uses it but by WHICH route, because a
+ * name-matched binding is the fragile one a GM most wants to see: it is the one
+ * that breaks on a rename and the one most likely to be a false positive.
+ */
+function collectPartyAbilities(formation) {
+  const rows = new Map();
+  for (const member of realMembers(formation)) {
+    const actor = getMemberActor(member);
+    if (!actor) continue;
+    for (const item of actor.items) {
+      if (item.type !== "ability") continue;
+      const key = abilityKey(item);
+      let row = rows.get(key);
+      if (!row) {
+        // Which checks would take this item, and how it qualified for each.
+        const bindings = [];
+        for (const [checkKey, cfg] of Object.entries(PARTY_CHECKS)) {
+          let route = null;
+          if (cfg.capability && itemHasCapability(item, cfg.capability)) route = "capability";
+          else if (item.getFlag(MODULE_ID, "checkKey") === cfg.flagKey) route = "binding";
+          else if (
+            !item.getFlag(MODULE_ID, "checkKey") &&
+            cfg.pattern.test(item.name) &&
+            (item.getFlag(MODULE_ID, "thiefSkill") || Number(item.system?.rollTarget) > 0)
+          ) {
+            route = "name";
+          }
+          if (route) {
+            bindings.push({
+              label: game.i18n.localize(cfg.label),
+              route,
+              routeLabel: game.i18n.localize(`ACKS-FORMATION.audit.route.${route}`),
+            });
+          }
+        }
+        const ruling = overrideFor(item);
+        row = {
+          key,
+          uuid: item.uuid,
+          name: item.name,
+          img: item.img,
+          holders: [],
+          bindings,
+          bound: bindings.length > 0,
+          // Only a name-only binding is worth flagging; a capability match is
+          // exactly what we want and needs no attention.
+          nameOnly: bindings.length > 0 && bindings.every((b) => b.route === "name"),
+          ruling,
+          overridden: ruling !== null,
+          // Default state = what automation would do unaided.
+          active: ruling === null ? bindings.length > 0 : ruling,
+        };
+        rows.set(key, row);
+      }
+      if (!row.holders.includes(actor.name)) row.holders.push(actor.name);
+      row.holderList = row.holders.join(", ");
+    }
+  }
+  return [...rows.values()].sort(
+    (a, b) => Number(b.bound) - Number(a.bound) || a.name.localeCompare(b.name),
+  );
 }
 
 /* -------------------------------------------- */

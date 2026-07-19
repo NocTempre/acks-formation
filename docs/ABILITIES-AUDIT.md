@@ -339,10 +339,41 @@ and Trapfinding bonus gates, `canSeeInDark()` (`kw:lightlessvision`) and
 
 **Union, not replacement.** Candidates are capability matches ∪ `checkKey`
 bindings ∪ name matches. A strict capability check would have *regressed*
-coverage: Eavesdropping is a genuine listening proficiency that does not
-declare `kw:listening`, and hand-made abilities carry no cookbook id at all.
-The union can only add members the old path would have missed — chiefly the
-renamed-item case, which was the whole fragility.
+coverage: hand-made abilities carry no cookbook id at all, and at the time of
+writing Eavesdropping did not declare `kw:listening`. The union can only add
+members the old path would have missed — chiefly the renamed-item case, which
+was the whole fragility.
+
+**Two of the untagged cases have since been fixed upstream** (acks-content
+`2d434f0`), each read individually against its printed page:
+
+| Entry | Now provides | Why |
+|---|---|---|
+| `def.prof.eavesdropping` (RR p.112) | `kw:listening` | Listens "as a thief of his class level"; the Judge makes a "**Listening** proficiency throw" on the character's behalf. |
+| `def.skill.shadowySenses` (RR p.34) | `kw:lightlessvision` | "Sees" as if carrying a light source shedding dim light in a stated radius — Lightless Vision's mechanic, with the same fine-detail caveat. |
+
+Neither was authored as `assists.aliasOf`, deliberately: the alias mechanism
+replaces the alias's description with its target's, and both entries carry their
+own printed constraints (Eavesdropping's quiet-environment and once-per-turn
+limits; Shadowy Senses' caveat list) that aliasing would discard. Same call as
+§4.2. These make the capability route reach two abilities the name pattern
+previously caught only by coincidence.
+
+**The union's audit surface.** A generous matcher needs somewhere to show its
+work, so the Skill Audit window opens with a **party ability roster**: every
+distinct ability in the party once, deduplicated by identity (register id, else
+folded name), with who holds it, which checks would take it, and **by which
+route** — capability, explicit binding, or name. Name-only matches are marked,
+since those are both the rename-fragile ones and the likeliest false positives.
+
+Each row cycles `automatic → forced off → forced on → automatic`, and a reset at
+the top clears every ruling. Rulings are world-scoped and keyed to the ability,
+not the item: "does Eavesdropping count as listening" is a ruling about the
+rules, so one decision governs every copy in every party. Absence means
+automatic — reset *deletes* entries rather than writing the current state, so
+returning to defaults restores automation rather than freezing a snapshot of it.
+A ruling outranks the per-item Skill checkbox, because the surface that shows
+what automation decided has to be able to overturn it.
 
 Degrades to the previous behaviour with acks-lib absent (no tokens fold, every
 call falls through to the name pattern), so it is `recommends`, not `requires`.

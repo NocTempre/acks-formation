@@ -367,7 +367,24 @@
       "progressionRow": "Progression by level",
       "isSkill": "Skill",
       "isSkillHint": "Mark this proficiency as a skill for party rolls. Turns on the Skill tab showing its progression, level factor, and live resolved target.",
-      "effectiveRow": "{name} is level {level}; ×{factor} factor → progression row L{row}."
+      "effectiveRow": "{name} is level {level}; ×{factor} factor → progression row L{row}.",
+      "roster": "Party abilities",
+      "rosterHint": "Every distinct ability in the party, once. Automation matches by capability, explicit binding, or name — the union of all three. Click a ruling to force it off or on; the reset returns everything to automatic. Rulings are world-wide and keyed to the ability, so one decision covers every copy.",
+      "reset": "Reset to automatic",
+      "resetHint": "Clear every GM ruling and let automation decide again.",
+      "resetConfirm": "Clear all ability rulings and return every ability to automatic detection?",
+      "noBinding": "not used by any check",
+      "overridden": "Set by the GM — not automatic.",
+      "toggleHint": "Click to cycle: automatic → forced off → forced on → automatic.",
+      "autoOn": "Auto: in use",
+      "autoOff": "Auto: unused",
+      "forcedOn": "Forced on",
+      "forcedOff": "Forced off",
+      "route": {
+        "capability": "Matched by capability — survives renaming.",
+        "binding": "Bound explicitly on the item's Skill tab.",
+        "name": "Matched by NAME only — this breaks if the item is renamed, and is the likeliest false positive. Bind it on the item's Skill tab to make it durable."
+      }
     }
   }
 }

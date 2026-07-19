@@ -699,3 +699,71 @@
   padding-left: 16px;
   font-size: var(--font-size-12, 12px);
 }
+
+/* --- Skill Audit: party ability roster --- */
+.acks-formation .ability-roster h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.acks-formation .ability-roster .reset-overrides {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0 8px;
+  line-height: 22px;
+  font-size: var(--font-size-11, 11px);
+}
+
+.acks-formation .ability-roster tr.inactive .member-cell,
+.acks-formation .ability-roster tr.inactive .binding-cell {
+  opacity: 0.5;
+}
+
+.acks-formation .ability-roster .binding {
+  display: inline-block;
+  margin: 1px 2px 1px 0;
+  padding: 0 5px;
+  border: 1px solid var(--color-border-light-tertiary, #7a7971);
+  border-radius: 3px;
+  font-size: var(--font-size-11, 11px);
+}
+
+/* A name-only match is the fragile one — mark it so it is visible at a glance. */
+.acks-formation .ability-roster .binding.route-name {
+  border-style: dashed;
+  border-color: #a06010;
+  color: #a06010;
+}
+
+.acks-formation .ability-roster .binding.route-capability {
+  border-color: #2d6a2d;
+  color: #2d6a2d;
+}
+
+.acks-formation .ability-roster .gm-set {
+  margin-left: 4px;
+  color: #4a6fa5;
+  font-size: var(--font-size-11, 11px);
+}
+
+.acks-formation .ability-roster .toggle-cell {
+  width: 7.5em;
+}
+
+.acks-formation .ability-roster .ruling {
+  width: 100%;
+  padding: 0 4px;
+  line-height: 22px;
+  font-size: var(--font-size-11, 11px);
+}
+
+.acks-formation .ability-roster .ruling.forced {
+  border-color: #4a6fa5;
+  font-weight: bold;
+}
+
+.acks-formation .ability-roster .ruling.off {
+  text-decoration: line-through;
+}
