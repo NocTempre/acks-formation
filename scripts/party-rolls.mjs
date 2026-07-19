@@ -1,5 +1,6 @@
 /* global game, foundry, ChatMessage, Roll, ui */
 import { MODULE_ID, THIEF_PROGRESSION } from "./constants.mjs";
+import { hasCapability, itemHasCapability } from "./ability-bridge.mjs";
 import { getMemberActor, hasAbility, isDown, isHurried, updateFormation } from "./formation-model.mjs";
 import { advanceRounds, advanceTurns } from "./turn-engine.mjs";
 
@@ -30,14 +31,28 @@ export { hasAbility };
  * 18+, or +2 on the throw for those separately skilled (RR p. 105).
  */
 const ALERTNESS_PATTERN = /alertness|mindfulness|alien senses|keen insect|attunement to nature/i;
-/** Attunement to Nature: +4 (not +2) with the Listening skill (JJ index). */
+/**
+ * Attunement to Nature: +4 (not +2) with the Listening skill — verified
+ * against JJ p.311 and authored into the acks-content register 2026-07-19.
+ * It is NOT an alias of Alertness precisely because this value differs, which
+ * is why it keeps its own pattern rather than folding into the one above.
+ */
 const ATTUNEMENT_PATTERN = /attunement to nature/i;
 /** Trapfinding: +2 on Searching (and Trapbreaking) throws (RR p. 121). */
 const TRAPFINDING_PATTERN = /trapfinding/i;
 
+/**
+ * Capability tokens (acks-lib). An ability implicitly provides its own id's
+ * capability, so `def.prof.trapfinding` satisfies `kw:trapfinding` with nothing
+ * tagged — these resolve against imported content today.
+ */
+const CAP_ALERTNESS = "kw:alertness";
+const CAP_TRAPFINDING = "kw:trapfinding";
+
 export const PARTY_CHECKS = Object.freeze({
   listen: {
     flagKey: "listen",
+    capability: "kw:listening",
     consumesRound: true, // 1 round to pause and listen
     label: "ACKS-FORMATION.rolls.listen",
     hint: "ACKS-FORMATION.rolls.listenHint",
@@ -50,6 +65,7 @@ export const PARTY_CHECKS = Object.freeze({
   },
   searchHasty: {
     flagKey: "search",
+    capability: "kw:searching",
     blockedWhenHurried: true, // RR p. 263: no hasty searching at combat speed
     consumesRound: true, // hasty search takes 1 round
     label: "ACKS-FORMATION.rolls.searchHasty",
@@ -63,6 +79,7 @@ export const PARTY_CHECKS = Object.freeze({
   },
   searchMethodical: {
     flagKey: "search",
+    capability: "kw:searching",
     label: "ACKS-FORMATION.rolls.searchMethodical",
     hint: "ACKS-FORMATION.rolls.searchMethodicalHint",
     icon: "fa-magnifying-glass-plus",
@@ -76,6 +93,7 @@ export const PARTY_CHECKS = Object.freeze({
   },
   dungeonbashing: {
     flagKey: "bash",
+    capability: null, // no register node: dungeon bashing is an Adventuring throw
     consumesRound: true, // bashing a door takes 1 round
     label: "ACKS-FORMATION.rolls.bash",
     hint: "ACKS-FORMATION.rolls.bashHint",
@@ -87,6 +105,7 @@ export const PARTY_CHECKS = Object.freeze({
   },
   tracking: {
     flagKey: "track",
+    capability: "kw:tracking",
     label: "ACKS-FORMATION.rolls.tracking",
     hint: "ACKS-FORMATION.rolls.trackingHint",
     icon: "fa-paw",
@@ -101,22 +120,38 @@ function loc(key, data = {}) {
   return game.i18n.format(`ACKS-FORMATION.${key}`, data);
 }
 
-/** All rollable ability items matching the check on this actor's sheet. */
+/**
+ * All rollable ability items matching the check on this actor's sheet.
+ *
+ * Three routes, unioned so no route can lose a member the others would find:
+ *   1. the check's **capability** token (`kw:searching`) — catches every
+ *      printing of the mechanic regardless of the item's name;
+ *   2. an explicit `checkKey` flag — the GM binding any item as a custom skill;
+ *   3. the **name pattern** — the original route, still needed for abilities
+ *      the register has not tagged (Eavesdropping does not yet declare
+ *      `kw:listening`) and for hand-made items with no cookbook id.
+ */
 function skillCandidates(actor, cfg) {
-  return actor.items.filter(
-    (i) =>
-      i.type === "ability" &&
-      // Unchecking "Skill" on the item sheet withdraws it from party rolls
-      // even if its bindings remain (re-checking restores them).
-      i.getFlag?.(MODULE_ID, "isSkill") !== false &&
-      // A checkKey flag designates ANY item (custom skills) for this roll;
-      // otherwise match by name. Auto-scaling items qualify regardless of
-      // stored target (high-level thief targets are 0 or negative).
-      (i.getFlag?.(MODULE_ID, "checkKey") === cfg.flagKey ||
-        (cfg.pattern.test(i.name) &&
-          !i.getFlag?.(MODULE_ID, "checkKey") &&
-          (i.getFlag?.(MODULE_ID, "thiefSkill") || Number(i.system?.rollTarget) > 0))),
-  );
+  return actor.items.filter((i) => {
+    if (i.type !== "ability") return false;
+    // Unchecking "Skill" on the item sheet withdraws it from party rolls
+    // even if its bindings remain (re-checking restores them).
+    if (i.getFlag?.(MODULE_ID, "isSkill") === false) return false;
+
+    // 1. Capability — precise, and immune to renaming.
+    if (cfg.capability && itemHasCapability(i, cfg.capability)) return true;
+
+    // 2. Explicit binding designates ANY item for this roll.
+    const checkKey = i.getFlag?.(MODULE_ID, "checkKey");
+    if (checkKey) return checkKey === cfg.flagKey;
+
+    // 3. Name match. Auto-scaling items qualify regardless of stored target
+    //    (high-level thief targets are 0 or negative).
+    return (
+      cfg.pattern.test(i.name) &&
+      (i.getFlag?.(MODULE_ID, "thiefSkill") || Number(i.system?.rollTarget) > 0)
+    );
+  });
 }
 
 /**
@@ -146,9 +181,13 @@ function scaledSkillTarget(actor, item) {
  * With several matching skill items, the BEST (lowest) target is used.
  */
 export function resolveCheck(actor, cfg) {
-  const alert = cfg.alertness && hasAbility(actor, ALERTNESS_PATTERN);
+  // Capability first (catches every printing of the mechanic), name pattern as
+  // the safety net for abilities the register has not tagged yet.
+  const alert =
+    cfg.alertness && (hasCapability(actor, CAP_ALERTNESS) || hasAbility(actor, ALERTNESS_PATTERN));
   const attuned = cfg.alertness && hasAbility(actor, ATTUNEMENT_PATTERN);
-  const trapfinder = cfg.trapfinding && hasAbility(actor, TRAPFINDING_PATTERN);
+  const trapfinder =
+    cfg.trapfinding && (hasCapability(actor, CAP_TRAPFINDING) || hasAbility(actor, TRAPFINDING_PATTERN));
   const parts = [];
 
   let best = null;

@@ -129,11 +129,22 @@ instructions · 8 effects specs · 4 rolls specs · **1 of 28 audited (Caving)**
    merge them.
 2. **`checkKey` is unset on all 25 shipped entries.** Binding runs entirely on
    name regex today. This is the exact fragility `kw:` tokens fix.
-3. **Only `kw:alertness`, `kw:lightlessvision`, `kw:scalyhide` exist** of the 36
-   capabilities registered. The tokens I need — `kw:searching`, `kw:listening`,
-   `kw:trapbreaking` — are **referenced** by Trapfinding's spec but not yet
-   *provided* by their own nodes. Migration of party-roll binding must wait on
-   those, or supply them locally.
+3. ~~**Only `kw:alertness`, `kw:lightlessvision`, `kw:scalyhide` exist** of the
+   36 capabilities registered. The tokens I need — `kw:searching`,
+   `kw:listening`, `kw:trapbreaking` — are referenced by Trapfinding's spec but
+   not *provided* by their own nodes. Migration must wait on those.~~
+   **WRONG — corrected 2026-07-19.** This read the `provides` field and
+   concluded the capability did not exist, missing the implicit rule stated
+   plainly in acks-lib's own docs: *"an ability always implicitly provides its
+   own id's capability, so a gate resolves before anything has been tagged."*
+   `satisfies()` checks `capabilityForId(a.id) === want` **first**, and
+   `capabilityForId("def.skill.searching")` is `"kw:searching"`. Verified by
+   execution: an actor holding only `def.skill.searching` satisfies
+   `kw:searching`; `def.prof.trapfinding` satisfies `kw:trapfinding`. An empty
+   `provides` list is the normal case, not a gap — explicit `provides` is only
+   needed to declare a capability an ability's *own id does not name* (which is
+   exactly what Attunement→`kw:alertness` in §4.2 is for).
+   **Phase 3 was therefore never blocked.** It is now done — see below.
 
 ---
 
@@ -256,6 +267,50 @@ which is the operative point for the Phase 0 decision.
 
 ---
 
+## 4a. Addendum — the scoping restructure (acks-lib 0.6.0 / acks-content `bf4a369`)
+
+Reviewed 2026-07-19, after eight reaction proficiencies were re-authored with
+scoping specs and acks-lib gained the primitive behind them.
+
+**What landed.** acks-lib 0.6.0 adds `scopeApplies(effect, ctx)` and six effect
+axes — `vsKinds`, `vsAlignment`, `vsAlignmentMode`, `tones`, `optionalRule`,
+`kickerAt`/`kickerNote` — answering *when* a modifier applies, which the model
+previously could not express (acks-influence was carrying these in private
+ActiveEffect flags where nothing else could read them). acks-content then used
+them on Diplomacy, Intimidation, Seduction, Mystic Aura, Beast Friendship,
+Folkways, Bargaining and Bribery, all now `audited`.
+
+**Assessment: correct, and two design calls are worth adopting family-wide.**
+
+1. **Gate and sign are different things, not a flag.** *"+1 versus Chaotic and
+   nothing otherwise"* and *"+2 versus Chaotic, −2 versus everyone else"* are
+   different rules; storing either as the other is wrong by double the value.
+   Defaulting to gate is the safe direction.
+2. **`undetermined` is not `false`.** A scope the context cannot settle has not
+   *failed*. Collapsing the two makes a bonus silently vanish against a target
+   the GM merely hasn't classified — a wrong answer that looks like a correct
+   one, which is the failure mode this whole pipeline is built to avoid.
+
+**Impact on this module: no adoption required yet, by design.** The axes are
+target- and tone-scoped, and exploration checks have neither. This module's own
+scope axis — methodical vs hasty search, careful vs hurried pace — is a
+procedure-time distinction with no corresponding axis, and correctly stays in
+`PARTY_CHECKS` (§2 records this as a boundary, not a gap). The one scoped effect
+that touches this module's domain is Attunement to Nature's *wilderness-only*
+surprise bonus (§4.2), and this module does not model surprise.
+
+`scopeApplies` therefore becomes relevant at **Phase 4**, when cookbook
+`effects` replace the hardcoded bonuses. `ability-bridge.mjs` records this
+deliberately rather than wrapping the call now with no caller.
+
+**One thing to carry forward.** The restructure caught a real defect the same
+way this audit caught §4.2: Bribery's existing spec silently missed its day
+tier because the page phrases it differently from the week and month tiers. A
+locator that matches *some* of an entry looks identical to one that matches all
+of it. That is an argument for the per-entry read the doctrine already
+mandates — and against exactly the "systematically fix all entries with that
+language" instinct principle 3 warns about.
+
 ## 5. Retirement plan
 
 Phased, because deleting the pack breaks worlds whose actors reference its items,
@@ -272,17 +327,43 @@ Mark `exploration-proficiencies` deprecated in `module.json`/docs and add
 `acks-abilities` + `acks-content` to `relationships.recommends`. Keep shipping
 it so existing worlds keep working. Stop adding entries.
 
-**Phase 3 — capability-based binding (gated on upstream).**
-Replace `skillCandidates()` name-regex matching with `acksLib.satisfies()`
-against `kw:` tokens, reading `provides` from the acks-abilities `extras` flag,
-falling back to the current regex when a token is absent. **Blocked until**
-`kw:searching`, `kw:listening`, `kw:trapbreaking` are provided by their own
-nodes (§3 mismatch 3).
+**Phase 3 — capability-based binding. DONE (2026-07-19).**
+`scripts/ability-bridge.mjs` folds an ability item into the `{id, provides}`
+shape acks-lib reasons over — `id` from `flags["acks-content"].cookbook.id`
+(written on import), `provides` from `flags["acks-abilities"].extras` — and
+exposes `hasCapability` / `itemHasCapability` over `acksLib.satisfies()`.
 
-**Phase 4 — drop the local tables.**
+Wired into `skillCandidates()` (per-check `capability` token), the Alertness
+and Trapfinding bonus gates, `canSeeInDark()` (`kw:lightlessvision`) and
+`mapperIsProficient()` (`kw:mapping`).
+
+**Union, not replacement.** Candidates are capability matches ∪ `checkKey`
+bindings ∪ name matches. A strict capability check would have *regressed*
+coverage: Eavesdropping is a genuine listening proficiency that does not
+declare `kw:listening`, and hand-made abilities carry no cookbook id at all.
+The union can only add members the old path would have missed — chiefly the
+renamed-item case, which was the whole fragility.
+
+Degrades to the previous behaviour with acks-lib absent (no tokens fold, every
+call falls through to the name pattern), so it is `recommends`, not `requires`.
+
+Verified by execution against the item shapes acks-content actually writes: a
+GM-renamed `def.skill.searching` resolves (the regex would miss it); Attunement
+satisfies `kw:alertness` via §4.2's authored `provides`; `def.prof.trapfinding`
+satisfies `kw:trapfinding` implicitly; a flagless hand-made item yields no
+capability and is left to the name path.
+
+**Phase 4 — drop the local tables. STILL GATED.**
 Replace `THIEF_PROGRESSION` with the progression values materialized by
-acks-content, and `levelFactor` with `PROGRESSION_LEVELS`. **Gated on** the
-relevant entries carrying `audited` sign-off — the burn-down is `1/28` today.
+acks-content, and `levelFactor` with `PROGRESSION_LEVELS`. Gated on the
+relevant entries carrying `audited` sign-off. Burn-down as of 2026-07-19:
+**skills 1/13**, proficiencies 21/120, powers 0/327. The eight progression
+instructions this module would consume all sit in `skills.json`, where only
+Caving-adjacent work has landed — so this stays blocked on the chef pass over
+the thief skills specifically, not on the overall burn-down.
+
+This is the right gate to hold: swapping a known-correct hardcoded table for
+unaudited extracted values would trade a verified number for an unverified one.
 
 **Phase 5 — remove the pack** once no shipped content references it and a
 migration path exists for worlds still holding its items. The history purge

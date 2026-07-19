@@ -1,6 +1,10 @@
 /* global game, foundry, ui, Actor, CONST */
 import { BODY_STONE, DARK_SENSE_PATTERN, DEFAULT_PARTY_IMAGE, FLAG_FORMATION_ID, MODULE_ID, POLE_ITEM_PATTERN, ROLES } from "./constants.mjs";
+import { hasCapability } from "./ability-bridge.mjs";
 import { monsterExplorationSpeed, monsterSeesInDark } from "./monster-traits.mjs";
+
+/** Sight without light, as a capability (acks-lib token, see ability-bridge). */
+const CAP_LIGHTLESS = "kw:lightlessvision";
 
 /** World-setting key holding all formation records, keyed by formation id. */
 export const SETTING_FORMATIONS = "formations";
@@ -113,7 +117,8 @@ export function getMapperActor(formation) {
 /** Is the formation's mapper proficient in Mapping (RR p. 114)? */
 export function mapperIsProficient(formation) {
   const mapper = getMapperActor(formation);
-  return mapper ? hasAbility(mapper, /mapping/i) : false;
+  if (!mapper) return false;
+  return hasCapability(mapper, "kw:mapping") || hasAbility(mapper, /mapping/i);
 }
 
 /** Exploration speed in feet/turn. Monsters with a Full Monster Sheet report
@@ -223,6 +228,9 @@ export function canSeeInDark(actor) {
   if (!actor) return false;
   const monster = monsterSeesInDark(actor);
   if (monster !== null) return monster;
+  // Capability first (Infravision, Lightless Vision and anything else the
+  // register tags), then the name pattern for untagged/hand-made abilities.
+  if (hasCapability(actor, CAP_LIGHTLESS)) return true;
   if (actor.items.some((i) => DARK_SENSE_PATTERN.test(i.name))) return true;
   const effects = typeof actor.allApplicableEffects === "function" ? actor.allApplicableEffects() : actor.effects;
   for (const effect of effects) {
