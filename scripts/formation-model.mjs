@@ -45,8 +45,24 @@ export function getFormation(id) {
   return id ? (getFormations()[id] ?? null) : null;
 }
 
+/**
+ * Every write to the formations setting funnels through one promise chain, so
+ * two async flows can never interleave their read-modify-write halves. The
+ * chain survives failures (a rejected save must not wedge every later one).
+ */
+let saveChain = Promise.resolve();
+
+function enqueueSave(fn) {
+  const run = saveChain.then(fn, fn);
+  saveChain = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
 async function saveFormations(all) {
-  return game.settings.set(MODULE_ID, SETTING_FORMATIONS, all);
+  return enqueueSave(() => game.settings.set(MODULE_ID, SETTING_FORMATIONS, all));
 }
 
 export async function updateFormation(formation) {
@@ -54,6 +70,28 @@ export async function updateFormation(formation) {
   all[formation.id] = formation;
   await saveFormations(all);
   return formation;
+}
+
+/**
+ * Targeted mutation for BACKGROUND writers (map sessions, cleanup hooks):
+ * re-reads the record FRESH inside the save lock, applies `mutate` to that
+ * copy only, and persists. `mutate` may return `false` to decline (its guards
+ * re-checked against current reality, not the stale copy it was called with).
+ *
+ * This exists because `updateFormation` writes the WHOLE record: a slow async
+ * flow holding a copy from before someone else's save will erase that save on
+ * completion. Deploy's combat flag was being erased exactly this way by the
+ * environment sync that every settings change triggers.
+ */
+export async function patchFormation(id, mutate) {
+  return enqueueSave(async () => {
+    const all = getFormations();
+    const record = all[id];
+    if (!record) return null;
+    if ((await mutate(record)) === false) return record;
+    await game.settings.set(MODULE_ID, SETTING_FORMATIONS, all);
+    return record;
+  });
 }
 
 export async function createFormation(name, { actorId = null } = {}) {
@@ -469,23 +507,63 @@ export async function removeMember(formation, actorId, { restore = true } = {}) 
   return formation;
 }
 
-/** Restore all member tokens, then remove the party token, actor, and record. */
-export async function disband(formation) {
+/**
+ * Dissolve a formation WITHOUT touching its party actor: restore every stashed
+ * member token, remove the party token, and delete the record. This is both
+ * the second half of `disband` and the cleanup for a formation whose party
+ * actor is already gone (deleted from the sidebar) — the case that used to
+ * leave a phantom record behind, silently re-adopted by the next "Add to
+ * party" and resurrecting its actor.
+ */
+export async function dissolveFormation(formation) {
   const members = [...formation.members];
   for (let i = 0; i < members.length; i++) {
-    const hadStash = !!members[i].tokenData;
-    await restoreMemberToken(formation, members[i], { grid: i });
-    // Persist each cleared stash: a failure mid-loop must not re-restore
-    // (duplicate) the already-placed tokens on a retry.
-    if (hadStash) await updateFormation(formation);
+    const member = members[i];
+    if (!member?.tokenData) continue;
+    try {
+      await restoreMemberToken(formation, member, { grid: i });
+      // Persist each cleared stash: a failure mid-loop must not re-restore
+      // (duplicate) the already-placed tokens on a retry.
+      await patchFormation(formation.id, (rec) => {
+        const stored = rec.members.find((m) => m.actorId === member.actorId);
+        if (stored) stored.tokenData = null;
+      });
+    } catch (err) {
+      console.error(`${MODULE_ID} | failed to restore a member token`, err);
+    }
   }
   const scene = getPartyScene(formation);
   if (scene && formation.tokenId && scene.tokens.get(formation.tokenId)) {
     await scene.deleteEmbeddedDocuments("Token", [formation.tokenId]);
   }
+  await deleteFormationRecord(formation.id);
+}
+
+/** Restore all member tokens, then remove the party token, actor, and record. */
+export async function disband(formation) {
+  await dissolveFormation(formation);
+  // The record is already gone, so the deleteActor cleanup hook finds nothing
+  // to do — no recursion.
   const actor = getPartyActor(formation);
   if (actor) await actor.delete();
-  await deleteFormationRecord(formation.id);
+}
+
+/**
+ * Drop every formation whose party actor no longer exists (restoring anything
+ * stashed inside first). Runs once at ready on the primary GM: it clears the
+ * phantom records accumulated by earlier versions, and any record orphaned by
+ * a crash mid-flow.
+ */
+export async function pruneFormations() {
+  for (const formation of Object.values(getFormations())) {
+    if (formation.actorId && game.actors.get(formation.actorId)) continue;
+    console.warn(`${MODULE_ID} | pruning formation "${formation.name}" — its party actor is gone`);
+    try {
+      await dissolveFormation(formation);
+    } catch (err) {
+      console.error(`${MODULE_ID} | failed to prune formation "${formation.name}"`, err);
+    }
+  }
 }
 
 /** Swap two grid cells (member↔member or member↔blank). */

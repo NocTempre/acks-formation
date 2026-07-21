@@ -13,9 +13,13 @@ import {
   SETTING_FORMATIONS,
   addMember,
   createFormation,
+  dissolveFormation,
   getFormation,
   getFormations,
+  getPartyActor,
   getPartyToken,
+  patchFormation,
+  pruneFormations,
   syncPartyActorSpeed,
   updateFormation,
 } from "./formation-model.mjs";
@@ -230,7 +234,42 @@ Hooks.once("ready", () => {
   registerMapSocket();
   registerRequestSocket();
   if (isPrimaryGM()) {
-    syncEnvironments().catch((err) => console.error(`${MODULE_ID} | environment sync failed`, err));
+    // Prune dead records FIRST (formations whose party actor is gone — the
+    // phantom source), then sync the environments of what remains.
+    pruneFormations()
+      .then(() => syncEnvironments())
+      .catch((err) => console.error(`${MODULE_ID} | startup sync failed`, err));
+  }
+});
+
+/* -------------------------------------------- */
+/*  Actor deletion cleanup                       */
+/* -------------------------------------------- */
+
+/* Deleting a party actor dissolves its formation: stashed member tokens are
+ * restored and the record removed. Without this, the record lingered, the next
+ * "Add to party" adopted it, and ensurePartyActor resurrected the deleted
+ * actor — the "phantom actor that cannot be deleted". A deleted MEMBER actor
+ * is likewise dropped from every formation, so its ghost cannot hold a rank. */
+Hooks.on("deleteActor", (actor) => {
+  if (!isPrimaryGM()) return;
+  if (actor.type === PARTY_TYPE) {
+    const formation = Object.values(getFormations()).find((f) => f.actorId === actor.id);
+    if (!formation) return;
+    dissolveFormation(formation)
+      .then(() => PartySheet.refreshAll())
+      .catch((err) => console.error(`${MODULE_ID} | formation cleanup failed`, err));
+    return;
+  }
+  const formations = Object.values(getFormations()).filter((f) => f.members.some((m) => m.actorId === actor.id));
+  for (const formation of formations) {
+    patchFormation(formation.id, (rec) => {
+      rec.members = rec.members.filter((m) => m.actorId !== actor.id);
+      rec.lights = (rec.lights ?? []).filter((l) => l.bearerId !== actor.id);
+      rec.spells = (rec.spells ?? []).filter((s) => s.casterId !== actor.id);
+    })
+      .then(() => PartySheet.refreshAll())
+      .catch((err) => console.error(`${MODULE_ID} | member cleanup failed`, err));
   }
 });
 
@@ -365,8 +404,10 @@ async function addTokensToParty(seedToken) {
   const formations = Object.values(getFormations());
   let formation = formations.find((f) => f.sceneId === scene.id && f.tokenId && scene.tokens.get(f.tokenId));
   // A fresh formation (hand-created Party Formation actor, no token placed
-  // yet) is adopted rather than silently spawning a duplicate party.
-  formation ??= formations.find((f) => !getPartyToken(f));
+  // yet) is adopted rather than silently spawning a duplicate party — but ONLY
+  // when its party actor still exists. A record whose actor is gone is dead:
+  // adopting it would resurrect the deleted actor with its stale members.
+  formation ??= formations.find((f) => !getPartyToken(f) && getPartyActor(f));
   formation ??= await createFormation();
 
   for (const tokenDoc of tokens) {

@@ -52,8 +52,10 @@ export async function onPartyCombatantCreated(combatant) {
   if (!formation) return;
   const combat = combatant.parent;
 
-  // Already deployed (e.g. the party token was re-added): just drop the extra combatant.
-  if (formation.combat?.active) {
+  // Already deployed (e.g. the party token was re-added): just drop the extra
+  // combatant. Deployed member tokens count as evidence even without the
+  // combat flag — deploying again would duplicate every member on the field.
+  if (formation.combat?.active || formation.members.some((m) => m.deployedTokenId)) {
     await combatant.delete();
     return;
   }
@@ -136,7 +138,13 @@ export async function onCombatRoundChange(combat) {
 /** When a combat is deleted, reform every formation that deployed into it. */
 export async function onCombatEnd(combat) {
   const formations = Object.values(getFormations()).filter(
-    (f) => f.combat?.active && f.combat.combatId === combat.id,
+    (f) =>
+      (f.combat?.active && f.combat.combatId === combat.id) ||
+      // Self-healing: deployed member tokens are evidence of an unfinished
+      // deploy even when the combat flag is missing (a crash, or a stale
+      // concurrent write having clobbered it). Reforming on evidence beats
+      // stranding the whole party on the field.
+      f.members.some((m) => m.deployedTokenId),
   );
   for (const formation of formations) {
     try {

@@ -5,7 +5,7 @@ import {
   getMemberActor,
   getPartyActor,
   mapperIsProficient,
-  updateFormation,
+  patchFormation,
 } from "./formation-model.mjs";
 import { getSocket, registerHandler } from "./socket.mjs";
 
@@ -175,8 +175,16 @@ async function openSession(formation, mapper, scene) {
       },
     },
   ]);
-  formation.mapSession = { itemUuid: item.uuid, sceneId: formation.sceneId };
-  await updateFormation(formation);
+  // This runs from the environment sync, whose copy of the record can be
+  // OLDER than saves made since (deploy's combat flag was being erased by
+  // exactly this write). Patch the one field onto the fresh record, with the
+  // guards re-checked against current reality; never write the stale copy.
+  const patched = await patchFormation(formation.id, (rec) => {
+    if (rec.mapSession || rec.combat?.active) return false;
+    rec.mapSession = { itemUuid: item.uuid, sceneId: rec.sceneId };
+  });
+  if (!patched?.mapSession) return; // world moved on: leave the item inactive
+  formation.mapSession = patched.mapSession;
   await announce(formation, loc("map.sessionStarted", { mapper: mapper.name }));
   if (!proficient) await announce(formation, loc("map.sessionUnproficient"), { whisper: true });
 }
@@ -232,9 +240,13 @@ export async function archiveSession(formation, { warn = false } = {}) {
 
   const item = await fromUuid(session.itemUuid);
   if (!item) {
-    // The working map left the party (traded, deleted): the session dies with it.
+    // The working map left the party (traded, deleted): the session dies with
+    // it. Patch, not whole-record write — this can run from the stale-copy
+    // environment sync.
     formation.mapSession = null;
-    await updateFormation(formation);
+    await patchFormation(formation.id, (rec) => {
+      rec.mapSession = null;
+    });
     await announce(formation, loc("map.sessionLostItem"), { whisper: true });
     return false;
   }
@@ -289,7 +301,9 @@ export async function closeMapSession(formation, { silent = false } = {}) {
     await item.setFlag(MODULE_ID, MAP_FLAG, { ...map, active: false });
   }
   formation.mapSession = null;
-  await updateFormation(formation);
+  await patchFormation(formation.id, (rec) => {
+    rec.mapSession = null;
+  });
   if (!silent) await announce(formation, loc("map.sessionClosed"));
 }
 
