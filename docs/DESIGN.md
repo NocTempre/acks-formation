@@ -58,10 +58,34 @@ Per turn, in order (mirrors JJ sequence of play step 5):
 5. Day boundary (144 turns) → ration reminder.
 6. Persist + chat summary card (public or GM-only per setting).
 
+## The player surface (v0.22)
+
+One sheet, two capability tiers — never two UIs. Formation state lives in a
+world setting only GMs can write, so every player mutation is a **declaration**:
+relayed over socketlib to the active GM client, which validates ownership
+against the *passed user id* (never the requesting client's say-so) and
+executes. Players act on what is THEIRS:
+
+| Surface | Player capability | Route |
+|---|---|---|
+| Marching order | Move their own character (up/down/left/right; target recomputed GM-side from the actor id, not the click's stale cell) | `reorder` |
+| Roles | Take up / set down roles on their own character (10'-pole item gate enforced GM-side) | `role` |
+| Lights | Douse/relight and shutter lights their character carries; add via the declaration panel | `lightToggle` / `lightShield` / `light` |
+| Spells | See all tracked spells; add their own via the declaration panel | `spell` |
+| Maps | See the party's maps and session status; consult (anchor) a map their character holds | `anchorMap` |
+| Checks & rest | Declare listen/search/bash/track and rest turns | `check` / `rest` |
+
+Judge secrets never reach a player's DOM: map `quality`/`distorted` and the
+mapper's proficiency exist only in the GM render context — a warped map must
+be indistinguishable from an accurate one to its holders. Removals, blanks,
+frontage, the clock, saves, tables, and session lifecycle stay GM-only.
+Role and light declarations are announced publicly, so the table sees who
+changed the party's posture.
+
 ## Deliberate non-features (v0.1)
 
 - Combat rounds are not auto-counted toward rest (10 rounds = 1 turn); the GM uses the manual Turn button after fights.
-- No socket layer: players never mutate formation state directly; their token drags are processed by the GM client's hook.
+- ~~No socket layer: players never mutate formation state directly~~ — superseded: socketlib relays player declarations (see *The player surface*); token drags are still processed by the GM client's hook.
 - Waypointed drags are measured start→end as a straight line.
 - The wandering-monster *tables* (which monster appears) are not rolled — dungeon-specific tables belong to the Judge; we roll the throw, distance, and minute only.
 

@@ -190,7 +190,14 @@
       "spellHint": "Add one of your character's spells to the formation's duration tracker",
       "rest": "the party rests for a turn",
       "restHint": "Declare a rest turn (resets the rest clock; recovers winded)",
-      "check": "a party {check}"
+      "check": "a party {check}",
+      "roleOn": "assigns {name} the {role} role.",
+      "roleOff": "relieves {name} of the {role} role.",
+      "shield": "closes the shutter on {bearer}'s lantern.",
+      "unshield": "opens the shutter on {bearer}'s lantern.",
+      "douse": "douses {bearer}'s light.",
+      "relight": "relights {bearer}'s light.",
+      "anchor": "consults the map “{map}”."
     },
     "role": {
       "mapper": "Mapper",

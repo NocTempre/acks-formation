@@ -207,13 +207,13 @@
           <span class="roles">
             {{#each this.roles}}
             <button type="button" class="role-chip {{#if this.active}}active{{/if}}" data-action="toggleRole"
-                    data-role="{{this.key}}" data-tooltip="{{this.hint}}" {{#unless @root.isGM}}disabled{{/unless}}>
+                    data-role="{{this.key}}" data-tooltip="{{this.hint}}" {{#unless this.canControl}}disabled{{/unless}}>
               {{this.label}}
             </button>
             {{/each}}
           </span>
         </div>
-        {{#if @root.isGM}}
+        {{#if this.canControl}}
         <div class="member-controls {{#if this.showHoriz}}grid-controls{{/if}}">
           <button type="button" data-action="memberUp" {{#unless this.canUp}}disabled{{/unless}}><i class="fa-solid fa-chevron-up"></i></button>
           {{#if this.showHoriz}}
@@ -221,9 +221,11 @@
           <button type="button" data-action="memberRight" {{#unless this.canRight}}disabled{{/unless}}><i class="fa-solid fa-chevron-right"></i></button>
           {{/if}}
           <button type="button" data-action="memberDown" {{#unless this.canDown}}disabled{{/unless}}><i class="fa-solid fa-chevron-down"></i></button>
+          {{#if @root.isGM}}
           <button type="button" data-action="removeMember" class="danger" data-tooltip="{{localize 'ACKS-FORMATION.app.removeMemberHint'}}">
             <i class="fa-solid fa-user-minus"></i>
           </button>
+          {{/if}}
         </div>
         {{/if}}
       </li>
@@ -242,7 +244,7 @@
       <i class="fa-solid {{#if this.lit}}fa-fire-flame-curved lit{{else}}fa-fire-flame-curved{{/if}}"></i>
       <span class="label">{{this.label}} — {{this.bearer}}</span>
       <span class="remaining">{{this.remaining}} {{localize "ACKS-FORMATION.app.turnsLeft"}}{{#if this.shielded}} · {{localize "ACKS-FORMATION.app.shieldedBadge"}}{{/if}}</span>
-      {{#if @root.isGM}}
+      {{#if this.canControl}}
       {{#if this.shieldable}}
       <button type="button" data-action="toggleShield" class="{{#if this.shielded}}paused{{/if}}" data-tooltip="{{localize 'ACKS-FORMATION.app.shieldHint'}}">
         <i class="fa-solid {{#if this.shielded}}fa-door-closed{{else}}fa-door-open{{/if}}"></i>
@@ -251,6 +253,8 @@
       <button type="button" data-action="toggleLight" data-tooltip="{{localize 'ACKS-FORMATION.app.toggleLightHint'}}">
         <i class="fa-solid {{#if this.lit}}fa-moon{{else}}fa-lightbulb{{/if}}"></i>
       </button>
+      {{/if}}
+      {{#if @root.isGM}}
       <button type="button" data-action="removeLight" class="danger"><i class="fa-solid fa-xmark"></i></button>
       {{/if}}
     </div>
@@ -308,18 +312,18 @@
     {{/if}}
   </section>
 
-  {{#if isGM}}
   <section class="maps">
     <h3>{{localize "ACKS-FORMATION.map.section"}}</h3>
     {{#if mapping.session}}
     <p class="session">
       <i class="fa-solid fa-map"></i> {{localize "ACKS-FORMATION.map.sessionLabel"}} <strong>{{mapping.itemName}}</strong>
-      {{#unless mapping.proficient}}<i class="fa-solid fa-pen-nib distorted" data-tooltip="{{localize 'ACKS-FORMATION.map.distortedHint'}}"></i>{{/unless}}
+      {{#if isGM}}{{#unless mapping.proficient}}<i class="fa-solid fa-pen-nib distorted" data-tooltip="{{localize 'ACKS-FORMATION.map.distortedHint'}}"></i>{{/unless}}{{/if}}
       {{#unless mapping.viewing}}<span class="warn">({{localize "ACKS-FORMATION.map.notViewing"}})</span>{{/unless}}
     </p>
     {{else}}
     <p class="hint">{{localize "ACKS-FORMATION.map.noSession"}}</p>
     {{/if}}
+    {{#if isGM}}
     <div class="buttons">
       <button type="button" data-action="newMap" {{#unless mapping.canStart}}disabled{{/unless}}
               data-tooltip="{{localize 'ACKS-FORMATION.map.newMapHint'}}">
@@ -337,6 +341,7 @@
         <i class="fa-solid fa-camera"></i> {{localize "ACKS-FORMATION.map.saveFog"}}
       </button>
     </div>
+    {{/if}}
     {{#each mapItems}}
     <div class="light map-item" data-item-uuid="{{this.uuid}}">
       <i class="fa-solid fa-map {{#if this.active}}lit{{/if}}"></i>
@@ -352,7 +357,6 @@
     </div>
     {{/each}}
   </section>
-  {{/if}}
 
   {{else}}
   <p class="hint empty-state">{{localize "ACKS-FORMATION.app.emptyState"}}</p>

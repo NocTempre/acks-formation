@@ -260,8 +260,13 @@ class ActorMock {
       return item;
     });
   }
-  testUserPermission() {
-    return true;
+  getUserLevel(user) {
+    const o = this.ownership ?? {};
+    return o[user?.id] ?? o.default ?? 0;
+  }
+  testUserPermission(user) {
+    if (user?.isGM) return true;
+    return this.getUserLevel(user) >= 3;
   }
 }
 globalThis.Actor = ActorMock;
@@ -425,9 +430,13 @@ globalThis.game = {
   i18n: { localize: (k) => k, format: (k, d) => `${k}${d ? " " + JSON.stringify(d) : ""}` },
   user: { id: "GM1", isGM: true },
   users: (() => {
-    const users = [{ id: "GM1", isGM: true, isSelf: true }];
+    const users = [
+      { id: "GM1", name: "GM", isGM: true, isSelf: true },
+      { id: "PL1", name: "Player One", isGM: false, isSelf: false },
+    ];
     // NOT Object.assign: that would evaluate the getter once at copy time.
     Object.defineProperty(users, "activeGM", { get: () => users[0] });
+    users.get = (id) => users.find((u) => u.id === id) ?? null;
     return users;
   })(),
   actors: new Coll(),
@@ -448,8 +457,20 @@ globalThis.game = {
 
 await import("../scripts/module.mjs");
 const model = await import("../scripts/formation-model.mjs");
+const engine = await import("../scripts/turn-engine.mjs");
+const requests = await import("../scripts/player-requests.mjs");
 Hooks.call("init");
 Hooks.call("ready");
+// socketlib: in-process loopback — executeAsGM invokes the registered handler
+// directly, which is exactly what happens when the GM client IS the executor.
+const socketHandlers = {};
+globalThis.socketlib = {
+  registerModule: () => ({
+    register: (name, fn) => (socketHandlers[name] = fn),
+    executeAsGM: async (name, ...args) => socketHandlers[name]?.(...args),
+  }),
+};
+Hooks.call("socketlib.ready");
 await sleep(10);
 
 const MODULE_ID = "acks-formation";
@@ -706,6 +727,85 @@ await scenario("disband tears everything down", async () => {
   assert.equal(Object.keys(readFormations()).length, 0, "record deleted");
   assert.ok(!game.actors.get(stored.actorId), "party actor deleted");
   assert.ok(scene.tokens.some((t) => t.actorId === alice.id), "member token restored");
+});
+
+await scenario("players steer their own members via the GM relay", async () => {
+  const dave = await ActorMock.create({
+    name: "Dave",
+    type: "character",
+    ownership: { default: 0, PL1: 3 },
+    system: {
+      hp: { value: 8, max: 8 },
+      details: { level: 2 },
+      movementacks: { exploration: 120 },
+      movement: { base: 120 },
+      encumbrance: { value: 4, max: 20 },
+      scores: { str: { mod: 0 } },
+      adventuring: { listening: 18, searching: 18, dungeonbashing: 18 },
+    },
+  });
+  const eve = await member("Eve"); // GM-owned only
+  await drain();
+
+  let formation = await model.createFormation("Relay Party");
+  formation = await model.addMember(formation, dave, null);
+  await model.addMember(model.getFormation(formation.id), eve, null);
+  await engine.addLight(model.getFormation(formation.id), "lantern", dave.id);
+  await drain();
+  const id = onlyFormation().id;
+  assert.deepEqual(
+    onlyFormation().members.map((m) => m.actorId),
+    [dave.id, eve.id],
+    "initial order",
+  );
+
+  const gmUser = game.user;
+  game.user = game.users.get("PL1");
+  try {
+    // Own member: role toggle and reorder land.
+    await requests.requestPartyAction(id, "role", { actorId: dave.id, role: "mapper" });
+    await drain();
+    assert.ok(
+      onlyFormation().members.find((m) => m.actorId === dave.id)?.roles?.includes("mapper"),
+      "player set a role on their own member",
+    );
+    await requests.requestPartyAction(id, "reorder", { actorId: dave.id, dir: "down" });
+    await drain();
+    assert.deepEqual(
+      onlyFormation().members.map((m) => m.actorId),
+      [eve.id, dave.id],
+      "player moved their own member back a rank",
+    );
+
+    // Someone else's member: rejected server-side.
+    await requests.requestPartyAction(id, "role", { actorId: eve.id, role: "scout" });
+    await drain();
+    assert.ok(
+      !onlyFormation().members.find((m) => m.actorId === eve.id)?.roles?.length,
+      "role on an unowned member is rejected",
+    );
+    await requests.requestPartyAction(id, "reorder", { actorId: eve.id, dir: "down" });
+    await drain();
+    assert.deepEqual(
+      onlyFormation().members.map((m) => m.actorId),
+      [eve.id, dave.id],
+      "reorder of an unowned member is rejected",
+    );
+
+    // Light discipline on their own lantern.
+    const lightId = onlyFormation().lights[0].id;
+    await requests.requestPartyAction(id, "lightShield", { lightId });
+    await drain();
+    assert.ok(onlyFormation().lights[0].shielded, "player shuttered their own lantern");
+    await requests.requestPartyAction(id, "lightToggle", { lightId });
+    await drain();
+    assert.ok(!onlyFormation().lights[0].lit, "player doused their own lantern");
+  } finally {
+    game.user = gmUser;
+  }
+
+  await model.disband(model.getFormation(id));
+  await drain();
 });
 
 if (failures) {

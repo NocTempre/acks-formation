@@ -51,13 +51,33 @@ function gmFormation(app) {
   return formation && game.user.isGM ? formation : null;
 }
 
-async function reorder(app, target, delta) {
-  const formation = gmFormation(app);
+/** Does the current (non-GM) user own this member's actor? */
+function ownsActor(actorId) {
+  const actor = game.actors.get(actorId);
+  return actor?.testUserPermission?.(game.user, "OWNER") ?? false;
+}
+
+/**
+ * Reorder a member. GMs move anyone (including blank cells) directly; players
+ * move THEIR OWN character by relaying to the GM, who recomputes the target
+ * cell from live state — the click's cell index may be stale by the time the
+ * request lands, the actor id never is.
+ */
+async function reorder(app, target, dir) {
+  const formation = app.formation;
   if (!formation) return;
-  const cell = Number(target.closest("[data-cell-index]")?.dataset.cellIndex);
-  if (!Number.isInteger(cell)) return;
-  await swapCells(formation, cell, delta);
-  app.render();
+  if (game.user.isGM) {
+    const cell = Number(target.closest("[data-cell-index]")?.dataset.cellIndex);
+    if (!Number.isInteger(cell)) return;
+    const frontage = getFrontage(formation);
+    const delta = dir === "up" ? -frontage : dir === "down" ? frontage : dir === "left" ? -1 : 1;
+    await swapCells(formation, cell, delta);
+    app.render();
+    return;
+  }
+  const actorId = target.closest("[data-actor-id]")?.dataset.actorId;
+  if (!actorId || !ownsActor(actorId)) return;
+  await requestPartyAction(formation.id, "reorder", { actorId, dir });
 }
 
 async function adjustTrackedSpell(app, target, delta) {
@@ -95,29 +115,34 @@ export const SHARED_ACTIONS = {
 
   /** Up/down move by a full rank when marching multiple abreast. */
   async memberUp(event, target) {
-    const formation = gmFormation(this);
-    if (formation) await reorder(this, target, -getFrontage(formation));
+    await reorder(this, target, "up");
   },
 
   async memberDown(event, target) {
-    const formation = gmFormation(this);
-    if (formation) await reorder(this, target, getFrontage(formation));
+    await reorder(this, target, "down");
   },
 
   async memberLeft(event, target) {
-    await reorder(this, target, -1);
+    await reorder(this, target, "left");
   },
 
   async memberRight(event, target) {
-    await reorder(this, target, 1);
+    await reorder(this, target, "right");
   },
 
+  /** GM toggles anyone's roles; a player declares roles for their own character. */
   async toggleRole(event, target) {
-    const formation = gmFormation(this);
+    const formation = this.formation;
     if (!formation) return;
     const actorId = target.closest("[data-actor-id]")?.dataset.actorId;
-    await toggleRole(formation, actorId, target.dataset.role);
-    this.render();
+    const role = target.dataset.role;
+    if (game.user.isGM) {
+      await toggleRole(formation, actorId, role);
+      this.render();
+      return;
+    }
+    if (!actorId || !ownsActor(actorId)) return;
+    await requestPartyAction(formation.id, "role", { actorId, role });
   },
 
   /** Skill audit: how every party roll resolves per member; custom-skill flags. */
@@ -178,11 +203,19 @@ export const SHARED_ACTIONS = {
     this.render();
   },
 
+  /** GM shields any light; a player shields lights their character carries. */
   async toggleShield(event, target) {
-    const formation = gmFormation(this);
+    const formation = this.formation;
     if (!formation) return;
-    await toggleShield(formation, target.closest("[data-light-id]")?.dataset.lightId);
-    this.render();
+    const lightId = target.closest("[data-light-id]")?.dataset.lightId;
+    if (game.user.isGM) {
+      await toggleShield(formation, lightId);
+      this.render();
+      return;
+    }
+    const light = formation.lights.find((l) => l.id === lightId);
+    if (!light || !ownsActor(light.bearerId)) return;
+    await requestPartyAction(formation.id, "lightShield", { lightId });
   },
 
   /** Pace (RR p. 263): careful exploration, or hurried at combat speed ×10
@@ -207,11 +240,19 @@ export const SHARED_ACTIONS = {
     this.render();
   },
 
+  /** GM douses/relights any light; a player, their own character's. */
   async toggleLight(event, target) {
-    const formation = gmFormation(this);
+    const formation = this.formation;
     if (!formation) return;
-    await toggleLight(formation, target.closest("[data-light-id]")?.dataset.lightId);
-    this.render();
+    const lightId = target.closest("[data-light-id]")?.dataset.lightId;
+    if (game.user.isGM) {
+      await toggleLight(formation, lightId);
+      this.render();
+      return;
+    }
+    const light = formation.lights.find((l) => l.id === lightId);
+    if (!light || !ownsActor(light.bearerId)) return;
+    await requestPartyAction(formation.id, "lightToggle", { lightId });
   },
 
   async removeLight(event, target) {
@@ -369,11 +410,19 @@ export const SHARED_ACTIONS = {
     this.render();
   },
 
+  /** GM anchors any map; a player consults (anchors) a map their member holds. */
   async anchorMap(event, target) {
-    const formation = gmFormation(this);
+    const formation = this.formation;
     if (!formation) return;
-    await anchorMap(formation, target.closest("[data-item-uuid]")?.dataset.itemUuid);
-    this.render();
+    const itemUuid = target.closest("[data-item-uuid]")?.dataset.itemUuid;
+    if (game.user.isGM) {
+      await anchorMap(formation, itemUuid);
+      this.render();
+      return;
+    }
+    const holder = fromUuidSync(itemUuid)?.parent;
+    if (!holder?.testUserPermission?.(game.user, "OWNER")) return;
+    await requestPartyAction(formation.id, "anchorMap", { itemUuid });
   },
 
   async saveFogMap() {

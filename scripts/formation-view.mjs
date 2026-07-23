@@ -75,10 +75,14 @@ export function buildFormationView(formation) {
     if (member?.blank || !member?.actorId) return { ...grid, blank: true };
     const actor = getMemberActor(member);
     const memberSpeed = explorationSpeedOf(actor);
+    const owned = actor?.testUserPermission?.(game.user, "OWNER") ?? false;
     return {
       ...grid,
       actorId: member.actorId,
       index: ++ordinal,
+      // Players steer their own characters: reorder + roles on owned members.
+      owned,
+      canControl: game.user.isGM || owned,
       name: actor?.name ?? game.i18n.localize("ACKS-FORMATION.app.missingActor"),
       img: actor?.img ?? "icons/svg/mystery-man.svg",
       speed: memberSpeed,
@@ -106,13 +110,19 @@ export function buildFormationView(formation) {
     };
   });
 
-  view.lights = formation.lights.map((light) => ({
-    ...light,
-    label: game.i18n.localize(LIGHT_SOURCES[light.type]?.label ?? light.type),
-    bearer: game.actors.get(light.bearerId)?.name ?? "?",
-    shieldable: !!LIGHT_SOURCES[light.type]?.shieldable,
-    shielded: !!light.shielded,
-  }));
+  view.lights = formation.lights.map((light) => {
+    const bearerActor = game.actors.get(light.bearerId);
+    const owned = bearerActor?.testUserPermission?.(game.user, "OWNER") ?? false;
+    return {
+      ...light,
+      label: game.i18n.localize(LIGHT_SOURCES[light.type]?.label ?? light.type),
+      bearer: bearerActor?.name ?? "?",
+      shieldable: !!LIGHT_SOURCES[light.type]?.shieldable,
+      shielded: !!light.shielded,
+      // A player manages the lights their own character carries.
+      canControl: game.user.isGM || owned,
+    };
+  });
 
   view.spells = (formation.spells ?? []).map((spell) => ({
     ...spell,
@@ -134,8 +144,69 @@ export function buildFormationView(formation) {
     icon: cfg.icon,
   }));
 
+  Object.assign(view, buildMapsView(formation));
+
   view.warnings = buildWarnings(formation, speed);
   return view;
+}
+
+/* -------------------------------------------- */
+/*  Maps (shared, per-user sanitized)           */
+/* -------------------------------------------- */
+
+/**
+ * The mapping status and the party's Map items — for EVERY user, because the
+ * party carries the maps. Sanitized per viewer: whether the record is
+ * distorted, and whether the mapper is actually proficient, are Judge secrets
+ * (the whole point of a warped map is that its holders cannot tell), so those
+ * fields exist only in the GM's context and never reach a player's DOM.
+ * Players may anchor a map held by a member they own.
+ */
+function buildMapsView(formation) {
+  const gm = game.user.isGM;
+  const viewing = !!formation.sceneId && canvas?.scene?.id === formation.sceneId;
+  const mapper = getMapperActor(formation);
+
+  const mapping = {
+    session: !!formation.mapSession,
+    viewing,
+    hasMapper: !!mapper,
+    mapperName: mapper?.name ?? null,
+    canStart: viewing && !!mapper,
+  };
+  if (gm) mapping.proficient = mapperIsProficient(formation);
+  if (formation.mapSession) {
+    mapping.itemName = fromUuidSync(formation.mapSession.itemUuid)?.name ?? "?";
+  }
+
+  const mapItems = collectMapItems(formation).map(({ item, holder, map }) => {
+    let anchorReason = null;
+    if (map.anchored) anchorReason = "ACKS-FORMATION.map.reasonAnchored";
+    else if (!map.explored) anchorReason = "ACKS-FORMATION.map.reasonEmpty";
+    else if (map.sceneId !== formation.sceneId) anchorReason = "ACKS-FORMATION.map.reasonScene";
+    else if (!viewing) anchorReason = "ACKS-FORMATION.map.reasonViewing";
+    const owned = holder?.testUserPermission?.(game.user, "OWNER") ?? false;
+    const row = {
+      uuid: item.uuid,
+      name: item.name,
+      holder: holder.name,
+      sceneName: map.sceneName ?? "?",
+      anchored: !!map.anchored,
+      active: !!map.active,
+      owned,
+      canAnchor: !anchorReason && (gm || owned),
+      anchorReason: anchorReason ? game.i18n.localize(anchorReason) : null,
+      // Opening the item sheet needs Foundry-side permission on the item.
+      canOpen: gm || owned,
+    };
+    if (gm) {
+      row.quality = map.quality;
+      row.distorted = map.quality === "distorted";
+    }
+    return row;
+  });
+
+  return { mapping, mapItems };
 }
 
 function buildWarnings(formation, speed) {
@@ -264,38 +335,9 @@ export function buildGMExtras(formation) {
     active: t.id === formation.tableId,
   }));
 
-  const mapper = getMapperActor(formation);
-  const viewing = !!formation.sceneId && canvas?.scene?.id === formation.sceneId;
-  extras.mapping = {
-    session: !!formation.mapSession,
-    viewing,
-    hasMapper: !!mapper,
-    mapperName: mapper?.name ?? null,
-    proficient: mapperIsProficient(formation),
-    canStart: viewing && !!mapper,
-  };
-  if (formation.mapSession) {
-    extras.mapping.itemName = fromUuidSync(formation.mapSession.itemUuid)?.name ?? "?";
-  }
-  extras.mapItems = collectMapItems(formation).map(({ item, holder, map }) => {
-    let anchorReason = null;
-    if (map.anchored) anchorReason = "ACKS-FORMATION.map.reasonAnchored";
-    else if (!map.explored) anchorReason = "ACKS-FORMATION.map.reasonEmpty";
-    else if (map.sceneId !== formation.sceneId) anchorReason = "ACKS-FORMATION.map.reasonScene";
-    else if (!viewing) anchorReason = "ACKS-FORMATION.map.reasonViewing";
-    return {
-      uuid: item.uuid,
-      name: item.name,
-      holder: holder.name,
-      sceneName: map.sceneName ?? "?",
-      quality: map.quality,
-      distorted: map.quality === "distorted",
-      anchored: !!map.anchored,
-      active: !!map.active,
-      canAnchor: !anchorReason,
-      anchorReason: anchorReason ? game.i18n.localize(anchorReason) : null,
-    };
-  });
+  // Maps and mapping status live in the SHARED view (buildMapsView) so
+  // players see the party's maps too; only the GM context carries the
+  // quality/proficiency secrets.
 
   return extras;
 }

@@ -1,8 +1,10 @@
-/* global game, foundry, ChatMessage, ui */
-import { getFormation } from "./formation-model.mjs";
+/* global game, foundry, ChatMessage, ui, fromUuid */
+import { getFormation, getFrontage, swapCells, toggleRole } from "./formation-model.mjs";
+import { ROLE_LABELS } from "./constants.mjs";
+import { anchorMap } from "./map-items.mjs";
 import { getSocket, registerHandler } from "./socket.mjs";
 import { rollPartyCheck } from "./party-rolls.mjs";
-import { addLight, addSpell, advanceTurns } from "./turn-engine.mjs";
+import { addLight, addSpell, advanceTurns, toggleLight, toggleShield } from "./turn-engine.mjs";
 
 /**
  * Player-declared party actions. All formation state lives in a world setting
@@ -11,10 +13,17 @@ import { addLight, addSpell, advanceTurns } from "./turn-engine.mjs";
  *
  * - light a torch/lantern/candle borne by a member they own;
  * - track a spell they cast (from an owned member's spellbook);
- * - declare a rest turn, or a listen/search/bash/track check.
+ * - declare a rest turn, or a listen/search/bash/track check;
+ * - move their own character in the marching order (reorder);
+ * - take up or set down a role for their own character (role);
+ * - douse/relight or shutter a light their character carries (lightToggle /
+ *   lightShield);
+ * - consult — anchor — a map their character holds (anchorMap).
  *
- * Every executed request is announced publicly so the table sees who declared
- * what; check results still go to the GM per the usual secrecy rules.
+ * Ownership is validated HERE, on the executing GM client, against the passed
+ * user id — never trusted from the requesting client. Every executed request
+ * is announced publicly so the table sees who declared what; check results
+ * still go to the GM per the usual secrecy rules.
  */
 
 const REQUEST_HANDLER = "partyRequest";
@@ -75,6 +84,78 @@ async function executeRequest(formation, user, type, payload) {
       const label = game.i18n.localize(`ACKS-FORMATION.rolls.${payload.key}`);
       await announceDeclaration(formation, user, loc("request.check", { check: label }));
       await rollPartyCheck(formation, payload.key);
+      break;
+    }
+
+    /* --- Marching order: a player moves THEIR OWN character --- */
+    case "reorder": {
+      if (!userOwnsMember(formation, user, payload.actorId)) return;
+      // Recompute position from live state: the requesting client's view may
+      // be stale, the actor id never is.
+      const index = formation.members.findIndex((m) => m.actorId === payload.actorId);
+      if (index < 0) return;
+      const frontage = getFrontage(formation);
+      let delta;
+      switch (payload.dir) {
+        case "up":
+          delta = -frontage;
+          break;
+        case "down":
+          delta = frontage;
+          break;
+        case "left":
+          if (index % frontage === 0) return; // already on the left edge
+          delta = -1;
+          break;
+        case "right":
+          if (index % frontage === frontage - 1) return; // right edge
+          delta = 1;
+          break;
+        default:
+          return;
+      }
+      await swapCells(formation, index, delta); // bounds-checked inside
+      break;
+    }
+
+    /* --- Roles: a player declares their own character's job --- */
+    case "role": {
+      if (!userOwnsMember(formation, user, payload.actorId)) return;
+      const before = formation.members.find((m) => m.actorId === payload.actorId);
+      const had = before?.roles?.includes(payload.role) ?? false;
+      await toggleRole(formation, payload.actorId, payload.role); // pole-item gate inside
+      await announceDeclaration(formation, user, loc(had ? "request.roleOff" : "request.roleOn", {
+        name: game.actors.get(payload.actorId)?.name ?? "?",
+        role: game.i18n.localize(ROLE_LABELS[payload.role] ?? payload.role),
+      }));
+      break;
+    }
+
+    /* --- Light discipline on a light the player's character carries --- */
+    case "lightToggle":
+    case "lightShield": {
+      const light = formation.lights.find((l) => l.id === payload.lightId);
+      if (!light || !userOwnsMember(formation, user, light.bearerId)) return;
+      const bearer = game.actors.get(light.bearerId)?.name ?? "?";
+      if (type === "lightShield") {
+        await announceDeclaration(formation, user, loc(light.shielded ? "request.unshield" : "request.shield", { bearer }));
+        await toggleShield(formation, payload.lightId);
+      } else {
+        await announceDeclaration(formation, user, loc(light.lit ? "request.douse" : "request.relight", { bearer }));
+        await toggleLight(formation, payload.lightId);
+      }
+      break;
+    }
+
+    /* --- Consult (anchor) a map the player's character holds --- */
+    case "anchorMap": {
+      const item = await fromUuid(payload.itemUuid);
+      const holderId = item?.parent?.id;
+      if (!holderId || !userOwnsMember(formation, user, holderId)) return;
+      await announceDeclaration(formation, user, loc("request.anchor", {
+        map: foundry.utils.escapeHTML(item.name),
+      }));
+      await anchorMap(formation, payload.itemUuid);
       break;
     }
   }
