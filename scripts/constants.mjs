@@ -64,7 +64,17 @@ export const ROLE_HINTS = Object.freeze({
   [ROLES.CARRIER]: "ACKS-FORMATION.role.carrierHint",
 });
 
-/** ACKS II saving throw keys (system: actor.system.saves[key].value). */
+/**
+ * ACKS II saving throw keys (system: actor.system.saves[key].value).
+ *
+ * `breath` is CORRECT for the released system: acks 14.0.1 stores member saves
+ * under `saves.breath` (displayed as "Blast" via ACKS.saves.breath.long).
+ * Verified live — a fresh character's schema is
+ * [paralysis, death, breath, implements, spell, wand] and ACKS.saves.blast.long
+ * does not exist. The system's dev branch renames breath→blast; flip this key
+ * when that lands in a system RELEASE, not before — the modules target the
+ * released system, and the test world runs it.
+ */
 export const SAVE_KEYS = Object.freeze(["paralysis", "death", "breath", "implements", "spell"]);
 
 /** Combat rounds per dungeon turn for time-keeping (RR p. 263). */
