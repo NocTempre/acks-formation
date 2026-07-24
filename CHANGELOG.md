@@ -3,6 +3,11 @@
 Releases before 0.21.1 predate this file; see the git history and GitHub
 releases for earlier changes.
 
+## 0.23.1
+
+- `abilityKey` folds the ability name with acks-lib's shared `slug` instead of
+  an inline copy. Pure refactor.
+
 ## 0.23.0
 
 **PartyData consumes acks-lib's shared compat stub.** The party actor's schema

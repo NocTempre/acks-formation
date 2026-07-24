@@ -23,6 +23,7 @@
  */
 
 import { MODULE_ID } from "./constants.mjs";
+import { slug } from "../../acks-lib/scripts/vocab.mjs";
 
 const CONTENT_ID = "acks-content";
 const ABILITIES_ID = "acks-abilities";
@@ -103,7 +104,7 @@ export const SETTING_ABILITY_OVERRIDES = "abilityOverrides";
 export function abilityKey(item) {
   const id = item?.getFlag?.(CONTENT_ID, "cookbook")?.id;
   if (id) return id;
-  return `name:${String(item?.name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+  return `name:${slug(item?.name)}`;
 }
 
 function overrides() {
